@@ -1,29 +1,34 @@
-var async = require('async-chainable');
 var events = require('events');
 var jp = require('json-pointer');
 var moment = require('moment');
 var xml2js = require('xml2js');
 
-function parse(xml, finish) {
+function parse(xml) {
 	var emitter = new events.EventEmitter();
 	var library = [];
 
-	async()
-		.then('json', function(next) {
-			xml2js.parseString(xml, {
-				normalizeTags: true,
-				normalize: true,
-			}, next);
-		})
-		.then(function(next) { // Sanity checks
-			if (!this.json.xml) return next('No root "xml" node');
-			if (!this.json.xml.records || !this.json.xml.records[0]) return next('No "xml.records" array');
-			if (!this.json.xml.records[0].record) return next('No "xml.records.record" array');
-			if (!this.json.xml.records[0].record.length) return next('No "xml.records.record" contents');
-			this.json = this.json.xml.records[0].record; // Focus on this branch, discarding the others
-			next();
-		})
-		.forEach('json', function(next, rawRef) {
+	var parser = new xml2js.Parser({
+		async: true,
+		normalizeTags: true,
+		normalize: true,
+	});
+
+	parser.parseString(xml);
+
+	parser.addListener('error', function(err) {
+		emitter.emit('error', err);
+	});
+
+	parser.addListener('end', function(json) {
+		// Sanity checks {{{
+		if (!json.xml) return emitter.emit('error', 'No root "xml" node');
+		if (!json.xml.records || !json.xml.records[0]) return emitter.emit('error', 'No "xml.records" array');
+		if (!json.xml.records[0].record) return emitter.emit('error', 'No "xml.records.record" array');
+		if (!json.xml.records[0].record.length) return emitter.emit('error', 'No "xml.records.record" contents');
+		json = json.xml.records[0].record; // Focus on this branch, discarding the others
+		// }}}
+
+		json.forEach(function(rawRef) {
 			var ref = {};
 
 			// Complex extractions {{{
@@ -72,14 +77,12 @@ function parse(xml, finish) {
 				ref.urls = rawRef['urls'][0]['related-urls'][0]['url'].map(function(rawURL) { return rawURL['style'][0]['_'] });
 			}
 			// }}}
-			console.log('EMIT', ref.recNumber, ref.title);
-			emitter.emit('reference', ref);
-			next();
-		})
-		.end(function(err) {
-			if (err) return finish(err);
-			finish(null, library);
+			emitter.emit('ref', ref);
 		});
+
+		emitter.emit('end', json.length);
+		parser.reset();
+	});
 
 	return emitter;
 };
