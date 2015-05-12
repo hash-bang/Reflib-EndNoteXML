@@ -2,7 +2,7 @@ var expect = require('chai').expect;
 var fs = require('fs');
 var rl = require('../index');
 
-describe('reflibEndNoteXML.parse(xml, cb)', function(){
+describe('parse(xml)', function(){
 	var resErr, resCount = 0, resCountCalled = 0;
 
 	before(function(next) {
