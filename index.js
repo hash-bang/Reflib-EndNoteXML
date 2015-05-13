@@ -1,7 +1,70 @@
+var _ = require('lodash');
 var events = require('events');
 var jp = require('json-pointer');
 var moment = require('moment');
+var stream = require('stream');
 var xml2js = require('xml2js');
+
+var types = [
+	{rlId: 'aggregatedDatabase', enText: 'Aggregated Database', enId: 55},
+	{rlId: 'ancientText', enText: 'Ancient Text', enId: 51},
+	{rlId: 'artwork', enText: 'Artwork', enId: 2},
+	{rlId: 'audiovisualMaterial', enText: 'Audiovisual Material', enId: 3},
+	{rlId: 'bill', enText: 'Bill', enId: 4},
+	{rlId: 'blog', enText: 'Blog', enId: 56},
+	{rlId: 'book', enText: 'Book', enId: 6},
+	{rlId: 'bookSection', enText: 'Book Section', enId: 5},
+	{rlId: 'case', enText: 'Case', enId: 7},
+	{rlId: 'catalog', enText: 'Catalog', enId: 8},
+	{rlId: 'chartOrTable', enText: 'Chart or Table', enId: 38},
+	{rlId: 'classicalWork', enText: 'Classical Work', enId: 49},
+	{rlId: 'computerProgram', enText: 'Computer Program', enId: 9},
+	{rlId: 'conferencePaper', enText: 'Conference Paper', enId: 47},
+	{rlId: 'conferenceProceedings', enText:', Conference Proceedings', enId: 10},
+	{rlId: 'dataset', enText: 'Dataset.', enId: 59},
+	{rlId: 'dictionary', enText: 'Dictionary', enId: 52},
+	{rlId: 'editedBook', enText: 'Edited Book', enId: 28},
+	{rlId: 'electronicArticle', enText: 'Electronic Article', enId: 43},
+	{rlId: 'electronicBookSection', enText:', Electronic Book Section', enId: 60},
+	{rlId: 'encyclopedia', enText: 'Encyclopedia', enId: 53},
+	{rlId: 'equation', enText: 'Equation', enId: 39},
+	{rlId: 'figure', enText: 'Figure', enId: 37},
+	{rlId: 'filmOrBroadcast', enText: 'Film or Broadcast', enId: 21},
+	{rlId: 'generic', enText: 'Generic', enId: 13},
+	{rlId: 'governmentDocument', enText: 'Government Document', enId: 46},
+	{rlId: 'grant', enText: 'Grant', enId: 54},
+	{rlId: 'hearing', enText: 'Hearing', enId: 14},
+	{rlId: 'journalArticle', enText: 'Journal Article', enId: 17},
+	{rlId: 'legalRuleOrRegulation', enText:', Legal Rule or Regulation', enId: 50},
+	{rlId: 'magazineArticle', enText: 'Magazine Article', enId: 19},
+	{rlId: 'manuscript', enText: 'Manuscript', enId: 36},
+	{rlId: 'map', enText: 'Map', enId: 20},
+	{rlId: 'music', enText: 'Music', enId: 61},
+	{rlId: 'newspaperArticle', enText: 'Newspaper Article', enId: 23},
+	{rlId: 'onlineDatabase', enText: 'Online Database', enId: 45},
+	{rlId: 'onlineMultimedia', enText: 'Online Multimedia', enId: 48},
+	{rlId: 'pamphlet', enText: 'Pamphlet', enId: 24},
+	{rlId: 'patent', enText: 'Patent', enId: 25},
+	{rlId: 'personalCommunication', enText:', Personal Communication', enId: 26},
+	{rlId: 'report', enText: 'Report', enId: 27},
+	{rlId: 'serial', enText: 'Serial', enId: 57},
+	{rlId: 'standard', enText: 'Standard', enId: 58},
+	{rlId: 'statute', enText: 'Statute', enId: 31},
+	{rlId: 'thesis', enText: 'Thesis', enId: 32},
+	{rlId: 'unpublished', enText: 'Unpublished Work', enId: 34},
+	{rlId: 'web', enText: 'Web Page', enId: 12},
+];
+
+/**
+* Translate an EndNote type to a RefLib type
+* This function uses memorize caching
+* @param string enType The EndNote type to translate
+* @return string the RefLib type
+*/
+var getTypeELtoRL = _.memoize(function(enType) {
+	var found = _.find(types, {enText: enType});
+	return found ? found.rlId : false;
+});
 
 function parse(xml) {
 	var emitter = new events.EventEmitter();
@@ -33,9 +96,16 @@ function parse(xml) {
 
 			// Complex extractions {{{
 			ref.recNumber = jp.get(rawRef, '/rec-number/0');
-			ref.type = jp.get(rawRef, '/ref-type/0/$/name');
 			if (jp.has(rawRef, '/titles/0/title/0/style/0/_')) ref.title = jp.get(rawRef, '/titles/0/title/0/style/0/_');
 			if (jp.has(rawRef, '/titles/0/secondary-title/0/style/0/_')) ref.titleSecondary = jp.get(rawRef, '/titles/0/secondary-title/0/style/0/_');
+			// }}}
+			// Type {{{
+			if (jp.has(rawRef, '/ref-type/0/$/name')) {
+				var rawType = jp.has(rawRef, '/ref-type/0/$/name');
+				var rlType = getTypeELtoRL(rawType);
+				if (!rlType) throw new Error('Unknown EndNote type: ' + rawType);
+				ref.type = rlType;
+			}
 			// }}}
 			// Authors {{{
 			if (jp.has('/contributors/0/authors/0/author/0')) {
@@ -67,7 +137,7 @@ function parse(xml) {
 			if (hasYear && hasDate) { // Full date
 				jp.date = moment(jp.get(rawRef, '/dates/0/pub-dates/0/data/0/style/0/_') + ' ' + jp.get(rawRef, '/dates/0/year/style/0/_')).toDate();
 			} else if (hasYear) {
-				jp.date = moment(jp.get(rawRef, '/dates/0/year/style/0/_') + '-01-01').toDate();
+				jp.date = jp.get(rawRef, '/dates/0/year/style/0/_');
 			} else if (hasDate) {
 				jp.date = jp.get(rawRef, '/dates/0/pub-dates/0/data/0/style/0/_');
 			}
