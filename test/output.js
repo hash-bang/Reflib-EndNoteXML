@@ -1,3 +1,4 @@
+var _  = require('lodash');
 var expect = require('chai').expect;
 var rl = require('../index');
 var stream = require('stream');
@@ -30,18 +31,16 @@ describe('EndNote XML output', function() {
 				// Feed result back into RL {{{
 				rlOutput = [];
 				rlErr = null;
-				rl.parse('endnotexml', output)
+				rl.parse(output)
 					.on('error', function(err) {
 						console.log('ERR', err);
 						rlErr = err;
 						finish();
 					})
 					.on('ref', function(ref) {
-						console.log('REF', ref);
 						rlOutput.push(ref);
 					})
 					.on('end', function() {
-						console.log('DONE');
 						finish();
 					});
 				// }}}
@@ -62,5 +61,19 @@ describe('EndNote XML output', function() {
 	it('should translate back into a collection', function() {
 		expect(rlErr).to.be.not.ok;
 		expect(rlOutput).to.have.length(2);
+
+		expect(_.find(rlOutput, {title: 'Hello World'})).to.deep.equal({
+			recNumber: '1',
+			title: 'Hello World',
+			type: 'report',
+			volume: '1',
+		});
+
+		expect(_.find(rlOutput, {title: 'Goodbye World'})).to.deep.equal({
+			recNumber: '2',
+			title: 'Goodbye World',
+			type: 'report',
+			volume: '2',
+		});
 	});
 });

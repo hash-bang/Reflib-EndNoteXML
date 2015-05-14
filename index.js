@@ -56,6 +56,11 @@ var types = [
 ];
 
 /**
+* List of allowable date formats
+*/
+var validDates = ['MM-DD-YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'];
+
+/**
 * Translate an EndNote type to a RefLib type
 * This function uses memorize caching
 * @param string enType The EndNote type to translate
@@ -112,6 +117,8 @@ function parse(xml) {
 			ref.recNumber = jp.get(rawRef, '/rec-number/0');
 			if (jp.has(rawRef, '/titles/0/title/0/style/0/_')) ref.title = jp.get(rawRef, '/titles/0/title/0/style/0/_');
 			if (jp.has(rawRef, '/titles/0/secondary-title/0/style/0/_')) ref.titleSecondary = jp.get(rawRef, '/titles/0/secondary-title/0/style/0/_');
+			if (jp.has(rawRef, '/auth-address/0/style/0/_')) ref.address = jp.get(rawRef, '/auth-address/0/style/0/_');
+			if (jp.has(rawRef, '/research-notes/0/style/0/_')) ref.researchNotes = jp.get(rawRef, '/research-notes/0/style/0/_');
 			// }}}
 			// Type {{{
 			if (jp.has(rawRef, '/ref-type/0/$/name')) {
@@ -122,8 +129,8 @@ function parse(xml) {
 			}
 			// }}}
 			// Authors {{{
-			if (jp.has('/contributors/0/authors/0/author/0')) {
-				ref.authors = jp.get('/contributors/0/authors/0/author/0').forEach(function(rawAuthor) {
+			if (jp.has(rawRef, '/contributors/0/authors/0/author/0/style')) {
+				ref.authors = jp.get(rawRef, '/contributors/0/authors/0/author').map(function(rawAuthor) {
 					return rawAuthor['style'][0]['_'];
 				});
 			}
@@ -138,22 +145,24 @@ function parse(xml) {
 				label: 'label',
 				caption: 'caption',
 				notes: 'notes',
-				address: 'auth-address',
-				researchNotes: 'research-notes',
 			}, function(rlKey, enKey) {
 				var path = '/' + enKey + '/0/style/0/_';
 				if (jp.has(rawRef, path)) ref[rlKey] = jp.get(rawRef, path);
 			});
 			// }}}
 			// Dates {{{
-			var hasYear = jp.has(rawRef, '/dates/0/year/style/0/_');
-			var hasDate = jp.has(rawRef, '/dates/0/pub-dates/0/data/0/style/0/_');
-			if (hasYear && hasDate) { // Full date
-				jp.date = moment(jp.get(rawRef, '/dates/0/pub-dates/0/data/0/style/0/_') + ' ' + jp.get(rawRef, '/dates/0/year/style/0/_')).toDate();
-			} else if (hasYear) {
-				jp.date = jp.get(rawRef, '/dates/0/year/style/0/_');
-			} else if (hasDate) {
-				jp.date = jp.get(rawRef, '/dates/0/pub-dates/0/data/0/style/0/_');
+			var hasYear = jp.has(rawRef, '/dates/0/year/0/style/0/_') ? jp.get(rawRef, '/dates/0/year/0/style/0/_') : false;
+			var hasDate = jp.has(rawRef, '/dates/0/pub-dates/0/date/0/style/0/_') ? jp.get(rawRef, '/dates/0/pub-dates/0/date/0/style/0/_') : false;
+			if (hasDate && moment(hasDate, validDates, true).isValid()) { // Date is fully valid
+				ref.date = moment(hasDate, validDates).toDate();
+			} else if (hasYear && hasDate && moment(hasDate + ' ' + hasYear, validDates, true).isValid()) { // Possible full date combined
+				ref.date = moment(hasDate + ' ' + hasYear, validDates).toDate();
+			} else if (hasYear && hasDate) { // Has both date + year but is unparsable
+				ref.date = hasDate + ' ' + hasYear;
+			} else if (hasYear) { // Just a year
+				ref.date = hasYear;
+			} else if (hasDate) { // Just a date - unparsable
+				ref.date = hasDate;
 			}
 			// }}}
 			// URLs {{{
@@ -193,7 +202,7 @@ function output(options) {
 
 			var foundType = getTypeRLtoEL(ref.type || settings.defaultType);
 			if (!foundType) return next('Unknown or unsuppoted reference type: ' + ref.type);
-			output += '<ref-type name="' + foundType.enId + '">' + settings.escape(foundType.enText) + '</ref-type>';
+			output += '<ref-type name="' + foundType.enText + '">' + foundType.enId + '</ref-type>';
 
 			output += '<contributors><authors>' +
 				ref.authors.map(function(author) {
