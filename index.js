@@ -80,6 +80,7 @@ function parse(xml) {
 	var emitter = new events.EventEmitter();
 	var library = [];
 	var hasErr = false;
+	var ended  = false;
 
 	var parser = new xml2js.Parser({
 		async: true,
@@ -94,6 +95,8 @@ function parse(xml) {
 
 	parser.addListener('end', function(json) {
 		if (hasErr) return;
+		if (ended) return; // For some reason the 'end' event can be called multiple times
+		ended = true;
 		// Sanity checks {{{
 		if (!json.xml) return emitter.emit('error', 'No root "xml" node');
 		if (!json.xml.records || !json.xml.records[0]) return emitter.emit('error', 'No "xml.records" array');
@@ -161,9 +164,9 @@ function parse(xml) {
 			emitter.emit('ref', ref);
 		});
 
+		parser = null;
 		emitter.emit('end', json.length);
 	});
-
 
 	setTimeout(function() { // Perform parser in async so the function will return the emitter otherwise an error could be thrown before the emitter is ready
 		parser.parseString(xml);
