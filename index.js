@@ -66,9 +66,20 @@ var getTypeELtoRL = _.memoize(function(enType) {
 	return found ? found.rlId : false;
 });
 
+/**
+* Get the type record from the RefLib ID
+* @param string rlId The RefLib type ID
+* @return object The object in the types collection
+*/
+var getTypeRLtoEL = _.memoize(function(rlId) {
+	var found = _.find(types, {rlId: rlId});
+	return found;
+});
+
 function parse(xml) {
 	var emitter = new events.EventEmitter();
 	var library = [];
+	var hasErr = false;
 
 	var parser = new xml2js.Parser({
 		async: true,
@@ -76,13 +87,13 @@ function parse(xml) {
 		normalize: true,
 	});
 
-	parser.parseString(xml);
-
 	parser.addListener('error', function(err) {
+		hasErr = true;
 		emitter.emit('error', err);
 	});
 
 	parser.addListener('end', function(json) {
+		if (hasErr) return;
 		// Sanity checks {{{
 		if (!json.xml) return emitter.emit('error', 'No root "xml" node');
 		if (!json.xml.records || !json.xml.records[0]) return emitter.emit('error', 'No "xml.records" array');
