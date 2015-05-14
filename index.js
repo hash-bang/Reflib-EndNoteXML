@@ -126,20 +126,20 @@ function parse(xml) {
 			}
 			// }}}
 			// Key to key extractions {{{
-			[
-				['pages','pages'],
-				['volume', 'volume'],
-				['number', 'number'],
-				['isbn', 'isbn'],
-				['abstract', 'abstract'],
-				['label', 'label'],
-				['caption', 'caption'],
-				['notes', 'notes'],
-				['address', 'auth-address'],
-				['researchNotes', 'research-notes'],
-			].forEach(function(extract) {
-				var path = '/' + extract[1] + '/0/style/0/_';
-				if (jp.has(rawRef, path)) ref[extract[0]] = jp.get(rawRef, path);
+			_.forEach({
+				pages: 'pages',
+				volume: 'volume',
+				number: 'number',
+				isbn: 'isbn',
+				abstract: 'abstract',
+				label: 'label',
+				caption: 'caption',
+				notes: 'notes',
+				address: 'auth-address',
+				researchNotes: 'research-notes',
+			}, function(rlKey, enKey) {
+				var path = '/' + enKey + '/0/style/0/_';
+				if (jp.has(rawRef, path)) ref[rlKey] = jp.get(rawRef, path);
 			});
 			// }}}
 			// Dates {{{
