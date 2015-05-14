@@ -3,7 +3,7 @@ var expect = require('chai').expect;
 var rl = require('../index');
 var stream = require('stream');
 
-describe('EndNote XML output', function() {
+describe('EndNote XML output - simple array', function() {
 	var refs = [
 		{id: 'ref01', title: 'Hello World', authors: ['Joe Random', 'John Random'], volume: 1},
 		{id: 'ref02', title: 'Goodbye World', authors: ['Josh Random', 'Janet Random'], volume: 2},
