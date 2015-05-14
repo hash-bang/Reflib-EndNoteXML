@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/hash-bang/Reflib-EndNoteXML",
   "dependencies": {
+    "async-chainable": "^1.7.11",
     "json-path": "^0.1.3",
     "json-pointer": "^0.3.0",
     "lodash": "^3.8.0",

@@ -1,8 +1,8 @@
 var _ = require('lodash');
+var async = require('async-chainable');
 var events = require('events');
 var jp = require('json-pointer');
 var moment = require('moment');
-var stream = require('stream');
 var xml2js = require('xml2js');
 
 var types = [
