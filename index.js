@@ -112,7 +112,7 @@ function parse(xml) {
 			// }}}
 			// Type {{{
 			if (jp.has(rawRef, '/ref-type/0/$/name')) {
-				var rawType = jp.has(rawRef, '/ref-type/0/$/name');
+				var rawType = jp.get(rawRef, '/ref-type/0/$/name');
 				var rlType = getTypeELtoRL(rawType);
 				if (!rlType) throw new Error('Unknown EndNote type: ' + rawType);
 				ref.type = rlType;
