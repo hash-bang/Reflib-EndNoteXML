@@ -26,7 +26,7 @@ describe('EndNote XML parser', function() {
 
 	before(function(next) {
 		this.timeout(60 * 1000);
-		rl.parse('endnotexml', fs.readFileSync(__dirname + '/data/endnote.xml'))
+		rl.parse(fs.readFileSync(__dirname + '/data/endnote.xml'))
 			.on('error', function(err) {
 				resErr = err;
 				next();

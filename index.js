@@ -162,12 +162,177 @@ function parse(xml) {
 		});
 
 		emitter.emit('end', json.length);
-		parser.reset();
+	});
+
+
+	setTimeout(function() { // Perform parser in async so the function will return the emitter otherwise an error could be thrown before the emitter is ready
+		parser.parseString(xml);
 	});
 
 	return emitter;
 };
 
+function output(options) {
+	var settings = _.defaults(options, {
+		stream: null,
+		xmlOptions: {
+			file: 'EndNote.enl',
+		},
+		defaultType: 'report', // Assume this reference type if we are not provided with one
+		encode: function(ref) {
+			settings.recordOffset++;
+
+			var output =
+				'<database name="' + settings.xmlOptions.file + '" path="c:\\' + settings.xmlOptions.file + '">' + settings.escape(settings.xmlOptions.file) + '</database>' +
+				'<source-app name="EndNote" version="16.0">EndNote</source-app>' +
+				'<rec-number>' + (ref.recNumber || settings.recordOffset) + '</rec-number>' +
+				'<foreign-keys><key app="EN" db-id="s55prpsswfsepue0xz25pxai2p909xtzszzv">' + ref.recordOffset + '</key></foreign-keys>';
+
+			var foundType = getTypeRLtoEL(ref.type || settings.defaultType);
+			if (!foundType) return next('Unknown or unsuppoted reference type: ' + ref.type);
+			output += '<ref-type name="' + foundType.enId + '">' + settings.escape(foundType.enText) + '</ref-type>';
+
+			output += '<contributors><authors>' +
+				ref.authors.map(function(author) {
+					return '<author><style face="normal" font="default" size="100%">' + settings.escape(author) + '</style></author>';
+				}) + 
+				'</authors></contributors>';
+
+
+			output += '<titles>' +
+				(ref.title ? '<title><style face="normal" font="default" size="100%">' + settings.escape(ref.title) + '</style></title>' : '') +
+				(ref.titleSecondary ? '<secondary-title><style face="normal" font="default" size="100%">' + settings.escape(ref.titleSecondary) + '</style></secondary-title>' : '') +
+				(ref.titleShort ? '<short-title><style face="normal" font="default" size="100%">' + settings.escape(ref.titleShort) + '</style></short-title>' : '') +
+				(ref.journalAlt ? '<alt-title><style face="normal" font="default" size="100%">' + settings.escape(ref.journalAlt) + '</style></alt-title>' : '') +
+				'</titles>';
+
+			if (ref.periodical)
+				output += '<periodical><full-title><style face="normal" font="default" size="100%">' + settings.escape(ref.periodical) + '</style></full-title></periodical>';
+
+			_.forEach({
+				'accessDate': 'access-date',
+				'accession': 'accession-num',
+				'address': 'auth-address',
+				'doi': 'electronic-resource-num',
+				'pages': 'pages',
+				'volume': 'volume',
+				'number': 'number',
+				'section': 'section',
+				'abstract': 'abstract',
+				'isbn': 'isbn',
+				'label': 'label',
+				'caption': 'caption',
+				'language': 'language',
+				'notes': 'notes',
+				'researchNotes': 'research-notes',
+				'databaseProvider': 'remote-database-provider',
+				'database': 'remote-database-name',
+				'workType': 'work-type',
+				'custom1': 'custom1',
+				'custom2': 'custom2',
+				'custom3': 'custom3',
+				'custom4': 'custom4',
+				'custom5': 'custom5',
+				'custom6': 'custom6',
+				'custom7': 'custom7',
+			}, function(rlKey, enKey) {
+				if (ref[rlKey])
+					output += '<' + enKey + '><style face="normal" font="default" size="100%">' + settings.escape(ref[rlKey]) + '</style></' + enKey + '>';
+			});
+
+			output += '<dates>';
+			if (_.isDate(ref.date)) {
+				output += 
+					'<year><style face="normal" font="default" size="100%">' + ref.date.getYear() + '</style></year>' +
+					'<pub-dates><date><style face="normal" font="default" size="100%">' + moment(ref.date).format('YYYY-MM-DD') + '</style></date></pub-dates>';
+			} else {
+				output += '<pub-dates><date><style face="normal" font="default" size="100%">' + ref.date + '</style></date></pub-dates>';
+			}
+			output += '</dates>';
+
+			if (ref.urls)
+				output += '<urls><related-urls>' +
+					ref.urls.map(function(url) { return '<url><style face="normal" font="default" size="100%">' + url + '</style></url>' }) +
+					'</related-urls></urls>';
+
+			if (ref.keywords) 
+				output += '<keywords>' +
+					ref.keywords.map(function(keyword) { return '<keyword><style face="normal" font="default" size="100%">' + keyword + '</style></keyword>' }) +
+					'</keywords>';
+
+			return '<record>' + output + '</record>';
+		},
+		escape: function(str) {
+			return ('' + str)
+				.replace("\r", '&#13;')
+				.replace('&', '&amp;')
+				.replace('<', '&lt;')
+				.replace('>', '&gt;');
+		},
+		recordOffset: 0,
+		content: [],
+	});
+
+	async()
+		// Sanity checks {{{
+		.then(function(next) {
+			if (!settings.stream) return('A writable \'stream\' option must be specified');
+			next();
+		})
+		// }}}
+
+		// Header {{{
+		.then(function(next) {
+			settings.stream.write('<?xml version="1.0" encoding="UTF-8"?><xml><records>');
+			next();
+		})
+		// }}}
+
+		// References {{{
+		.then(function(next) {
+			if (_.isArray(settings.content)) { // Array of refs
+				settings.content.forEach(function(ref) {
+					settings.stream.write(settings.encode(ref));
+				});
+				next();
+			} else if (_.isObject(settings.content)) { // Single ref
+				settings.stream.write(settings.encode(settings.content));
+				next();
+			} else if (_.isFunction(settings.context)) { // Callback
+				var fetcher = function() {
+					var batch = settings.fetch();
+					if (_.isArray(batch)) { // Callback provided array
+						batch.forEach(function(ref) {
+							settings.stream.write(settings.encode(ref));
+						});
+						setTimeout(fetcher);
+					} else if(_.isObject(batch)) { // Callback provided single ref
+						settings.stream.write(settings.encode(batch));
+						setTimeout(fetcher);
+					} else { // End of stream
+						next();
+					}
+				};
+			}
+		})
+		// }}}
+
+		// Footer {{{
+		.then(function(next) {
+			settings.stream.write('</records></xml>');
+			next();
+		})
+		// }}}
+
+		.end(function(err) {
+			settings.stream.end();
+			if (err) throw new Error(err);
+		});
+
+	return settings.stream;
+}
+
 module.exports = {
+	output: output,
 	parse: parse,
 };
