@@ -300,7 +300,26 @@ function output(options) {
 
 		// References {{{
 		.then(function(next) {
-			if (_.isArray(settings.content)) { // Array of refs
+			if (_.isFunction(settings.content)) { // Callback
+				var batchNo = 0;
+				var fetcher = function() {
+					settings.content(function(err, data) {
+						if (err) return emitter.error(err);
+						if (_.isArray(data)) { // Callback provided array
+							data.forEach(function(ref) {
+								settings.stream.write(settings.encode(ref));
+							});
+							setTimeout(fetcher);
+						} else if(_.isObject(data)) { // Callback provided single ref
+							settings.stream.write(settings.encode(data));
+							setTimeout(fetcher);
+						} else { // End of stream
+							next();
+						}
+					}, batchNo++);
+				};
+				fetcher();
+			} else if (_.isArray(settings.content)) { // Array of refs
 				settings.content.forEach(function(ref) {
 					settings.stream.write(settings.encode(ref));
 				});
@@ -308,21 +327,6 @@ function output(options) {
 			} else if (_.isObject(settings.content)) { // Single ref
 				settings.stream.write(settings.encode(settings.content));
 				next();
-			} else if (_.isFunction(settings.context)) { // Callback
-				var fetcher = function() {
-					var batch = settings.fetch();
-					if (_.isArray(batch)) { // Callback provided array
-						batch.forEach(function(ref) {
-							settings.stream.write(settings.encode(ref));
-						});
-						setTimeout(fetcher);
-					} else if(_.isObject(batch)) { // Callback provided single ref
-						settings.stream.write(settings.encode(batch));
-						setTimeout(fetcher);
-					} else { // End of stream
-						next();
-					}
-				};
 			}
 		})
 		// }}}
