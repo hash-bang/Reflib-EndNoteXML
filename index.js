@@ -205,9 +205,9 @@ function output(options) {
 			output += '<ref-type name="' + foundType.enText + '">' + foundType.enId + '</ref-type>';
 
 			output += '<contributors><authors>' +
-				ref.authors.map(function(author) {
+				(ref.authors ? ref.authors.map(function(author) {
 					return '<author><style face="normal" font="default" size="100%">' + settings.escape(author) + '</style></author>';
-				}) + 
+				}) : '') +
 				'</authors></contributors>';
 
 
@@ -252,15 +252,13 @@ function output(options) {
 					output += '<' + enKey + '><style face="normal" font="default" size="100%">' + settings.escape(ref[rlKey]) + '</style></' + enKey + '>';
 			});
 
-			output += '<dates>';
-			if (_.isDate(ref.date)) {
+			if (ref.dates && _.isDate(ref.date)) {
 				output += 
-					'<year><style face="normal" font="default" size="100%">' + ref.date.getYear() + '</style></year>' +
-					'<pub-dates><date><style face="normal" font="default" size="100%">' + moment(ref.date).format('YYYY-MM-DD') + '</style></date></pub-dates>';
-			} else {
-				output += '<pub-dates><date><style face="normal" font="default" size="100%">' + ref.date + '</style></date></pub-dates>';
+					'<dates><year><style face="normal" font="default" size="100%">' + ref.date.getYear() + '</style></year>' +
+					'<pub-dates><date><style face="normal" font="default" size="100%">' + moment(ref.date).format('YYYY-MM-DD') + '</style></date></pub-dates></dates>';
+			} else if (ref.dates) {
+				output += '<dates><pub-dates><date><style face="normal" font="default" size="100%">' + ref.date + '</style></date></pub-dates></dates>';
 			}
-			output += '</dates>';
 
 			if (ref.urls)
 				output += '<urls><related-urls>' +
