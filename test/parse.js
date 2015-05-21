@@ -53,7 +53,7 @@ describe('EndNote XML parser', function() {
 	});
 
 	it('end count should be accurate', function() {
-		expect(resCount).to.not.equal(0);
+		expect(resCount).to.equal(1988);
 		expect(resCountCalled).to.not.equal(0);
 		expect(resCount).to.equal(resCountCalled);
 	});
