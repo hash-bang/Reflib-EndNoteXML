@@ -81,6 +81,21 @@ var getTypeRLtoEL = _.memoize(function(rlId) {
 	return found;
 });
 
+
+/**
+* Default string -> XML encoder
+* @param string str The input string to encode
+*/
+function _escape(str) {
+	return ('' + str)
+		.replace(/&/g, '&amp;')
+		.replace(/\r/g, '&#13;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;');
+}
+
 function parse(xml) {
 	var emitter = new events.EventEmitter();
 	var library = [];
@@ -272,13 +287,7 @@ function output(options) {
 
 			return '<record>' + output + '</record>';
 		},
-		escape: function(str) {
-			return ('' + str)
-				.replace("\r", '&#13;')
-				.replace('&', '&amp;')
-				.replace('<', '&lt;')
-				.replace('>', '&gt;');
-		},
+		escape: this._escape,
 		recordOffset: 0,
 		content: [],
 	});
@@ -349,4 +358,5 @@ function output(options) {
 module.exports = {
 	output: output,
 	parse: parse,
+	_escape: _escape,
 };
