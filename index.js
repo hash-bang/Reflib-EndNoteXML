@@ -213,11 +213,11 @@ function output(options) {
 				'<database name="' + settings.xmlOptions.file + '" path="c:\\' + settings.xmlOptions.file + '">' + settings.escape(settings.xmlOptions.file) + '</database>' +
 				'<source-app name="EndNote" version="16.0">EndNote</source-app>' +
 				'<rec-number>' + (ref.recNumber || settings.recordOffset) + '</rec-number>' +
-				'<foreign-keys><key app="EN" db-id="s55prpsswfsepue0xz25pxai2p909xtzszzv">' + ref.recordOffset + '</key></foreign-keys>';
+				'<foreign-keys><key app="EN" db-id="s55prpsswfsepue0xz25pxai2p909xtzszzv">' + settings.escape(ref.recordOffset) + '</key></foreign-keys>';
 
 			var foundType = getTypeRLtoEL(ref.type || settings.defaultType);
 			if (!foundType) return next('Unknown or unsuppoted reference type: ' + ref.type);
-			output += '<ref-type name="' + foundType.enText + '">' + foundType.enId + '</ref-type>';
+			output += '<ref-type name="' + foundType.enText + '">' + settings.escape(foundType.enId) + '</ref-type>';
 
 			output += '<contributors><authors>' +
 				(ref.authors ? ref.authors.map(function(author) {
@@ -262,27 +262,27 @@ function output(options) {
 				'custom5': 'custom5',
 				'custom6': 'custom6',
 				'custom7': 'custom7',
-			}, function(rlKey, enKey) {
+			}, function(enKey, rlKey) {
 				if (ref[rlKey])
 					output += '<' + enKey + '><style face="normal" font="default" size="100%">' + settings.escape(ref[rlKey]) + '</style></' + enKey + '>';
 			});
 
-			if (ref.dates && _.isDate(ref.date)) {
+			if (ref.date && _.isDate(ref.date)) {
 				output += 
 					'<dates><year><style face="normal" font="default" size="100%">' + ref.date.getYear() + '</style></year>' +
 					'<pub-dates><date><style face="normal" font="default" size="100%">' + moment(ref.date).format('YYYY-MM-DD') + '</style></date></pub-dates></dates>';
-			} else if (ref.dates) {
-				output += '<dates><pub-dates><date><style face="normal" font="default" size="100%">' + ref.date + '</style></date></pub-dates></dates>';
+			} else if (ref.date) {
+				output += '<dates><pub-dates><date><style face="normal" font="default" size="100%">' + settings.escape(ref.date) + '</style></date></pub-dates></dates>';
 			}
 
 			if (ref.urls)
 				output += '<urls><related-urls>' +
-					ref.urls.map(function(url) { return '<url><style face="normal" font="default" size="100%">' + url + '</style></url>' }) +
+					ref.urls.map(function(url) { return '<url><style face="normal" font="default" size="100%">' + settings.escape(url) + '</style></url>' }) +
 					'</related-urls></urls>';
 
 			if (ref.keywords) 
 				output += '<keywords>' +
-					ref.keywords.map(function(keyword) { return '<keyword><style face="normal" font="default" size="100%">' + keyword + '</style></keyword>' }) +
+					ref.keywords.map(function(keyword) { return '<keyword><style face="normal" font="default" size="100%">' + settings.escape(keyword) + '</style></keyword>' }) +
 					'</keywords>';
 
 			return '<record>' + output + '</record>';
