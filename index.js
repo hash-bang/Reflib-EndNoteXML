@@ -131,7 +131,7 @@ function parse(xml) {
 			// Complex extractions {{{
 			ref.recNumber = jp.get(rawRef, '/rec-number/0');
 			if (jp.has(rawRef, '/titles/0/title/0/style/0/_')) ref.title = jp.get(rawRef, '/titles/0/title/0/style/0/_');
-			if (jp.has(rawRef, '/titles/0/secondary-title/0/style/0/_')) ref.titleSecondary = jp.get(rawRef, '/titles/0/secondary-title/0/style/0/_');
+			if (jp.has(rawRef, '/titles/0/secondary-title/0/style/0/_')) ref.journal = jp.get(rawRef, '/titles/0/secondary-title/0/style/0/_');
 			if (jp.has(rawRef, '/auth-address/0/style/0/_')) ref.address = jp.get(rawRef, '/auth-address/0/style/0/_');
 			if (jp.has(rawRef, '/research-notes/0/style/0/_')) ref.researchNotes = jp.get(rawRef, '/research-notes/0/style/0/_');
 			// }}}
@@ -228,7 +228,7 @@ function output(options) {
 
 			output += '<titles>' +
 				(ref.title ? '<title><style face="normal" font="default" size="100%">' + settings.escape(ref.title) + '</style></title>' : '') +
-				(ref.titleSecondary ? '<secondary-title><style face="normal" font="default" size="100%">' + settings.escape(ref.titleSecondary) + '</style></secondary-title>' : '') +
+				(ref.journal ? '<secondary-title><style face="normal" font="default" size="100%">' + settings.escape(ref.journal) + '</style></secondary-title>' : '') +
 				(ref.titleShort ? '<short-title><style face="normal" font="default" size="100%">' + settings.escape(ref.titleShort) + '</style></short-title>' : '') +
 				(ref.journalAlt ? '<alt-title><style face="normal" font="default" size="100%">' + settings.escape(ref.journalAlt) + '</style></alt-title>' : '') +
 				'</titles>';

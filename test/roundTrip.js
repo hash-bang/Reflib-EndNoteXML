@@ -110,7 +110,7 @@ describe('EndNote XML - XML file -> object -> XML buffer', function() {
 		var sample = sampleData['pediatric-cardiac'];
 		expect(sample).to.be.ok;
 		expect(sample).to.have.property('title', 'A method for chest drainage after pediatric cardiac surgery: a prospective randomized trial');
-		expect(sample).to.have.property('titleSecondary', 'Journal of Thoracic & Cardiovascular Surgery');
+		expect(sample).to.have.property('journal', 'Journal of Thoracic & Cardiovascular Surgery');
 		expect(sample).to.have.property('authors');
 		expect(sample.authors).to.have.length(1);
 		expect(sample.authors[0]).to.equal('Agati, Salvatore; Mignosa, Carmelo; Gitto, Placido; Trimarchi, Eugenio Santo; Ciccarello, Giuseppe; Salvo, Dario; Trimarchi, Giuseppe');
@@ -136,7 +136,7 @@ describe('EndNote XML - XML file -> object -> XML buffer', function() {
 		var sample = sampleData['everolimus-immunosuppression'];
 		expect(sample).to.be.ok;
 		expect(sample).to.have.property('title', 'Everolimus immunosuppression in de novo heart transplant recipients: What does the evidence tell us now?');
-		expect(sample).to.have.property('titleSecondary', 'Transplantation Reviews');
+		expect(sample).to.have.property('journal', 'Transplantation Reviews');
 		expect(sample).to.have.property('authors');
 		expect(sample.authors).to.have.length(10);
 		expect(sample.authors).to.deep.equal(['Zuckermann, A.', 'Wang, S. S.', 'Epailly, E.', 'Barten, M. J.', 'Sigurdardottir, V.', 'Segovia, J.', 'Varnous, S.', 'Turazza, F. M.', 'Potena, L.', 'Lehmkuhl, H. B.']);
@@ -161,7 +161,7 @@ describe('EndNote XML - XML file -> object -> XML buffer', function() {
 		var sample = sampleData['silver-nitrate'];
 		expect(sample).to.be.ok;
 		expect(sample).to.have.property('title', 'Prospective randomized trial of silver nitrate vs talc slurry in pleurodesis for symptomatic malignant pleural effusions');
-		expect(sample).to.have.property('titleSecondary', 'Chest');
+		expect(sample).to.have.property('journal', 'Chest');
 		expect(sample).to.have.property('authors');
 		expect(sample.authors).to.have.length(7);
 		expect(sample.authors).to.deep.equal(['Paschoalini, Marcello da Silveira','Vargas, Francisco S.','Marchi, Evaldo','Pereira, Jose Rodrigues','Jatene, Fabio B.','Antonangelo, Leila','Light, Richard W.']);
