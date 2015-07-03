@@ -16,9 +16,7 @@ describe('EndNote XML parser - test #2', function() {
 			.on('ref', function(ref) {
 				data[ref.isbn] = ref;
 			})
-			.on('end', function() {
-				next();
-			});
+			.on('end', next);
 	});
 
 	it('should not raise an error', function() {

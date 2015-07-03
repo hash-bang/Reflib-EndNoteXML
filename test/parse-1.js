@@ -23,10 +23,7 @@ describe('EndNote XML parser - test #1', function() {
 					sampleData['silver-nitrate'] = ref;
 				}
 			})
-			.on('end', function(count) {
-				resCount = count;
-				next();
-			});
+			.on('end', next);
 	});
 
 	it('should not raise an error', function() {
@@ -34,9 +31,7 @@ describe('EndNote XML parser - test #1', function() {
 	});
 
 	it('end count should be accurate', function() {
-		expect(resCount).to.equal(1988);
-		expect(resCountCalled).to.not.equal(0);
-		expect(resCount).to.equal(resCountCalled);
+		expect(resCountCalled).to.equal(1988);
 	});
 
 	it('should return random sample (pediatric-cardiac)', function() {

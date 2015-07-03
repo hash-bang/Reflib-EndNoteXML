@@ -40,9 +40,7 @@ describe('EndNote XML output - array input', function() {
 					.on('ref', function(ref) {
 						rlOutput.push(ref);
 					})
-					.on('end', function() {
-						finish();
-					});
+					.on('end', finish);
 				// }}}
 			});
 
@@ -118,9 +116,7 @@ describe('EndNote XML output - objects via callback', function() {
 					.on('ref', function(ref) {
 						rlOutput.push(ref);
 					})
-					.on('end', function() {
-						finish();
-					});
+					.on('end', finish);
 				// }}}
 			});
 
@@ -198,9 +194,7 @@ describe('EndNote XML output - array via callback', function() {
 					.on('ref', function(ref) {
 						rlOutput.push(ref);
 					})
-					.on('end', function() {
-						finish();
-					});
+					.on('end', finish);
 				// }}}
 			});
 

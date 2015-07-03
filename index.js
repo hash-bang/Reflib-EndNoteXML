@@ -189,7 +189,7 @@ function parse(xml) {
 		});
 
 		parser = null;
-		emitter.emit('end', json.length);
+		emitter.emit('end');
 	});
 
 	setTimeout(function() { // Perform parser in async so the function will return the emitter otherwise an error could be thrown before the emitter is ready
@@ -295,7 +295,7 @@ function output(options) {
 	async()
 		// Sanity checks {{{
 		.then(function(next) {
-			if (!settings.stream) return('A writable \'stream\' option must be specified');
+			if (!settings.stream) return next('A writable \'stream\' option must be specified');
 			next();
 		})
 		// }}}

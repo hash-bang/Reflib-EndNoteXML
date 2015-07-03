@@ -10,9 +10,7 @@ describe('EndNote XML parser - bad XML', function() {
 				resErr = err;
 				next();
 			})
-			.on('end', function(count) {
-				next();
-			});
+			.on('end', next);
 	});
 
 	it('Should return an error', function() {

@@ -32,9 +32,7 @@ describe('EndNote XML - XML file -> object -> XML buffer', function() {
 							sampleData.push(ref);
 						allData.push(ref);
 					})
-					.on('end', function() {
-						next();
-					});
+					.on('end', next);
 				// }}}
 			})
 			.then(function(next) {
@@ -74,10 +72,7 @@ describe('EndNote XML - XML file -> object -> XML buffer', function() {
 							sampleData['silver-nitrate'] = ref;
 						}
 					})
-					.on('end', function(count) {
-						resCount = count;
-						next();
-					});
+					.on('end', next);
 				// }}}
 			})
 			.end(function(err) {
@@ -99,7 +94,7 @@ describe('EndNote XML - XML file -> object -> XML buffer', function() {
 	});
 
 	it('should finish with the same number of records', function() {
-		expect(resCount).to.equal(1988);
+		expect(allData).to.have.length(1988);
 	});
 
 	it('should return XML', function() {
