@@ -45,7 +45,7 @@ var types = [
 	{rlId: 'onlineMultimedia', enText: 'Online Multimedia', enId: 48},
 	{rlId: 'pamphlet', enText: 'Pamphlet', enId: 24},
 	{rlId: 'patent', enText: 'Patent', enId: 25},
-	{rlId: 'personalCommunication', enText:', Personal Communication', enId: 26},
+	{rlId: 'personalCommunication', enText: 'Personal Communication', enId: 26},
 	{rlId: 'report', enText: 'Report', enId: 27},
 	{rlId: 'serial', enText: 'Serial', enId: 57},
 	{rlId: 'standard', enText: 'Standard', enId: 58},
