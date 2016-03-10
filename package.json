@@ -1,6 +1,6 @@
 {
   "name": "reflib-endnotexml",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Reflib parser for EndNote XML files",
   "main": "index.js",
   "repository": {

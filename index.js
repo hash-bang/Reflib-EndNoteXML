@@ -20,7 +20,7 @@ var types = [
 	{rlId: 'classicalWork', enText: 'Classical Work', enId: 49},
 	{rlId: 'computerProgram', enText: 'Computer Program', enId: 9},
 	{rlId: 'conferencePaper', enText: 'Conference Paper', enId: 47},
-	{rlId: 'conferenceProceedings', enText:', Conference Proceedings', enId: 10},
+	{rlId: 'conferenceProceedings', enText: 'Conference Proceedings', enId: 10},
 	{rlId: 'dataset', enText: 'Dataset.', enId: 59},
 	{rlId: 'dictionary', enText: 'Dictionary', enId: 52},
 	{rlId: 'editedBook', enText: 'Edited Book', enId: 28},
