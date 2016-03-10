@@ -46,7 +46,8 @@ describe('EndNote XML parser - test #1', function() {
 		expect(sample).to.have.property('pages', '1306-9');
 		expect(sample).to.have.property('volume', '131');
 		expect(sample).to.have.property('number', '6');
-		expect(sample).to.have.property('date', 'Jun 2006');
+		expect(sample).to.have.property('year', '2006');
+		expect(sample).to.have.property('date', 'Jun'); // Note: upstream reflib will fix these date formats for us but we're testing the raw output here
 		expect(sample).to.have.property('abstract');
 		expect(sample.abstract).to.match(/^OBJECTIVES: .*removal\.$/);
 		expect(sample).to.have.property('label', 'OK');
@@ -72,7 +73,7 @@ describe('EndNote XML parser - test #1', function() {
 		expect(sample).to.have.property('pages', '76-84');
 		expect(sample).to.have.property('volume', '27');
 		expect(sample).to.have.property('number', '3');
-		expect(sample).to.have.property('date', '2013');
+		expect(sample).to.have.property('year', '2013');
 		expect(sample).to.have.property('abstract');
 		expect(sample.abstract).to.match(/^The efficacy of everolimus.*2013 Elsevier Inc\.$/);
 		expect(sample).to.have.property('label', 'OK');
@@ -97,7 +98,8 @@ describe('EndNote XML parser - test #1', function() {
 		expect(sample).to.have.property('pages', '684-9');
 		expect(sample).to.have.property('volume', '128');
 		expect(sample).to.have.property('number', '2');
-		expect(sample).to.have.property('date', 'Aug 2005');
+		expect(sample).to.have.property('year', '2005');
+		expect(sample).to.have.property('date', 'Aug');
 		expect(sample).to.have.property('abstract');
 		expect(sample.abstract).to.match(/production of a pleurodesis\.$/);
 		expect(sample).to.have.property('label', 'OK');

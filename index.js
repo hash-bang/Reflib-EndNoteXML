@@ -56,11 +56,6 @@ var types = [
 ];
 
 /**
-* List of allowable date formats
-*/
-var validDates = ['MM-DD-YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'];
-
-/**
 * Translate an EndNote type to a RefLib type
 * This function uses memorize caching
 * @param string enType The EndNote type to translate
@@ -166,19 +161,8 @@ function parse(xml) {
 			});
 			// }}}
 			// Dates {{{
-			var hasYear = jp.has(rawRef, '/dates/0/year/0/style/0/_') ? jp.get(rawRef, '/dates/0/year/0/style/0/_') : false;
-			var hasDate = jp.has(rawRef, '/dates/0/pub-dates/0/date/0/style/0/_') ? jp.get(rawRef, '/dates/0/pub-dates/0/date/0/style/0/_') : false;
-			if (hasDate && moment(hasDate, validDates, true).isValid()) { // Date is fully valid
-				ref.date = moment(hasDate, validDates).toDate();
-			} else if (hasYear && hasDate && moment(hasDate + ' ' + hasYear, validDates, true).isValid()) { // Possible full date combined
-				ref.date = moment(hasDate + ' ' + hasYear, validDates).toDate();
-			} else if (hasYear && hasDate) { // Has both date + year but is unparsable
-				ref.date = hasDate + ' ' + hasYear;
-			} else if (hasYear) { // Just a year
-				ref.date = hasYear;
-			} else if (hasDate) { // Just a date - unparsable
-				ref.date = hasDate;
-			}
+			if (jp.has(rawRef, '/dates/0/year/0/style/0/_')) ref.year = jp.get(rawRef, '/dates/0/year/0/style/0/_');
+			if (jp.has(rawRef, '/dates/0/pub-dates/0/date/0/style/0/_')) ref.date = jp.get(rawRef, '/dates/0/pub-dates/0/date/0/style/0/_');
 			// }}}
 			// URLs {{{
 			if (jp.has(rawRef, '/urls/0/related-urls/0/url')) {
@@ -237,23 +221,23 @@ function output(options) {
 				output += '<periodical><full-title><style face="normal" font="default" size="100%">' + settings.escape(ref.periodical) + '</style></full-title></periodical>';
 
 			_.forEach({
+				'abstract': 'abstract',
 				'accessDate': 'access-date',
 				'accession': 'accession-num',
 				'address': 'auth-address',
-				'doi': 'electronic-resource-num',
-				'pages': 'pages',
-				'volume': 'volume',
-				'number': 'number',
-				'section': 'section',
-				'abstract': 'abstract',
-				'isbn': 'isbn',
-				'label': 'label',
 				'caption': 'caption',
-				'language': 'language',
-				'notes': 'notes',
-				'researchNotes': 'research-notes',
 				'databaseProvider': 'remote-database-provider',
 				'database': 'remote-database-name',
+				'doi': 'electronic-resource-num',
+				'isbn': 'isbn',
+				'label': 'label',
+				'language': 'language',
+				'notes': 'notes',
+				'number': 'number',
+				'pages': 'pages',
+				'researchNotes': 'research-notes',
+				'section': 'section',
+				'volume': 'volume',
 				'workType': 'work-type',
 				'custom1': 'custom1',
 				'custom2': 'custom2',
@@ -267,12 +251,16 @@ function output(options) {
 					output += '<' + enKey + '><style face="normal" font="default" size="100%">' + settings.escape(ref[rlKey]) + '</style></' + enKey + '>';
 			});
 
-			if (ref.date && _.isDate(ref.date)) {
-				output += 
-					'<dates><year><style face="normal" font="default" size="100%">' + ref.date.getYear() + '</style></year>' +
-					'<pub-dates><date><style face="normal" font="default" size="100%">' + moment(ref.date).format('YYYY-MM-DD') + '</style></date></pub-dates></dates>';
+			if (ref.date && ref.year && _.isDate(ref.date)) {
+				output += '<dates><year><style face="normal" font="default" size="100%">' + ref.year + '</style></year>';
+				output += '<pub-dates><date><style face="normal" font="default" size="100%">' + moment(ref.date).format('YYYY-MM-DD') + '</style></date></pub-dates></dates>';
+			} else if (ref.date && ref.year) {
+				output += '<dates><year><style face="normal" font="default" size="100%">' + ref.year + '</style></year>';
+				output += '<pub-dates><date><style face="normal" font="default" size="100%">' + ref.date + '</style></date></pub-dates></dates>';
 			} else if (ref.date) {
 				output += '<dates><pub-dates><date><style face="normal" font="default" size="100%">' + settings.escape(ref.date) + '</style></date></pub-dates></dates>';
+			} else if (ref.year) {
+				output += '<dates><year><style face="normal" font="default" size="100%">' + ref.year + '</style></year>';
 			}
 
 			if (ref.urls)
