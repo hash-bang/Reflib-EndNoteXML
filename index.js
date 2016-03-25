@@ -137,9 +137,12 @@ function parse(input) {
 			}
 
 			ref += '<' + node.name
-			_.forEach(node.attribites, function(v, k) {
-				ref += ' ' + k + '="' + entities.encodeXML(v) + '"';
-			})
+
+			if (node.name != 'style') // Dont bother saving these attribs
+				_.forEach(node.attributes, function(v, k) {
+					ref += ' ' + k + '="' + entities.encodeXML(v) + '"';
+				});
+
 			ref += '>';
 		})
 		.on('closetag', function(tag) {
