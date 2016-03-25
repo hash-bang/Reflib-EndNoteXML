@@ -123,12 +123,17 @@ function parse(input) {
 	// Setup events {{{
 	var ref;
 	var inRef = false;
+	var hasErr = false;
 	parser
 		.on('error', function (e) {
-			console.error("error!", e)
-			// clear the error
-			this._parser.error = null
-			this._parser.resume()
+			if (hasErr) {
+				parser.end();
+				return; // Already errored
+			}
+
+			hasErr = true;
+			parser.end();
+			emitter.emit('error', e);
 		})
 		.on('opentag', function(node) {
 			if (node.name == 'record') {
@@ -165,7 +170,7 @@ function parse(input) {
 			if (inRef) ref += '<![CDATA[' + data + ']]>';
 		})
 		.on('end', function() {
-			emitter.emit('end');
+			if (!hasErr) emitter.emit('end');
 		});
 	// }}}
 	// Feed into parser {{{
