@@ -1,8 +1,12 @@
-var _ = require('lodash');
+var _ = require('lodash').mixin({
+	isStream: require('isstream'),
+});
+
 var async = require('async-chainable');
+var entities = require('entities');
 var events = require('events');
-var jp = require('json-pointer');
 var moment = require('moment');
+var sax = require('sax');
 var xml2js = require('xml2js');
 
 var types = [
@@ -91,97 +95,145 @@ function _escape(str) {
 		.replace(/'/g, '&apos;');
 }
 
-function parse(xml) {
-	var emitter = new events.EventEmitter();
-	var library = [];
-	var hasErr = false;
-	var ended  = false;
 
-	var parser = new xml2js.Parser({
-		async: true,
+function parse(input) {
+	var emitter = new events.EventEmitter();
+
+	// Setup parser {{{
+	var parser;
+	if (_.isStream(input)) {
+		parser = sax.createStream(true, {});
+	} else if (_.isString(input) || _.isBuffer(input)) {
+		parser = sax.parser(true);
+		parser.on = function(event, cb) { // Quick binder to simulate on() behaviour
+			parser['on' + event] = cb;
+			return parser;
+		};
+	} else {
+		throw new Error('Unknown input type for parse(): ' + (typeof input));
+	}
+	// }}}
+	// Setup record parser {{{
+	var recParser = new xml2js.Parser({
+		async: false, // We will handle our own async
 		normalizeTags: true,
 		normalize: true,
 	});
-
-	parser.addListener('error', function(err) {
-		hasErr = true;
-		emitter.emit('error', err);
-	});
-
-	parser.addListener('end', function(json) {
-		if (hasErr) return;
-		if (ended) return; // For some reason the 'end' event can be called multiple times
-		ended = true;
-		// Sanity checks {{{
-		if (!json.xml) return emitter.emit('error', 'No root "xml" node');
-		if (!json.xml.records || !json.xml.records[0]) return emitter.emit('error', 'No "xml.records" array');
-		if (!json.xml.records[0].record) return emitter.emit('error', 'No "xml.records.record" array');
-		if (!json.xml.records[0].record.length) return emitter.emit('error', 'No "xml.records.record" contents');
-		json = json.xml.records[0].record; // Focus on this branch, discarding the others
-		// }}}
-
-		json.forEach(function(rawRef) {
-			var ref = {};
-
-			// Complex extractions {{{
-			ref.recNumber = jp.get(rawRef, '/rec-number/0');
-			if (jp.has(rawRef, '/titles/0/title/0/style/0/_')) ref.title = jp.get(rawRef, '/titles/0/title/0/style/0/_');
-			if (jp.has(rawRef, '/titles/0/secondary-title/0/style/0/_')) ref.journal = jp.get(rawRef, '/titles/0/secondary-title/0/style/0/_');
-			if (jp.has(rawRef, '/auth-address/0/style/0/_')) ref.address = jp.get(rawRef, '/auth-address/0/style/0/_');
-			if (jp.has(rawRef, '/research-notes/0/style/0/_')) ref.researchNotes = jp.get(rawRef, '/research-notes/0/style/0/_');
-			// }}}
-			// Type {{{
-			if (jp.has(rawRef, '/ref-type/0/$/name')) {
-				var rawType = jp.get(rawRef, '/ref-type/0/$/name');
-				var rlType = getTypeELtoRL(rawType);
-				if (!rlType) throw new Error('Unknown EndNote type: ' + rawType);
-				ref.type = rlType;
+	// }}}
+	// Setup events {{{
+	var ref;
+	var inRef = false;
+	parser
+		.on('error', function (e) {
+			console.error("error!", e)
+			// clear the error
+			this._parser.error = null
+			this._parser.resume()
+		})
+		.on('opentag', function(node) {
+			if (node.name == 'record') {
+				ref = '<?xml version="1.0" encoding="UTF-8"?><xml><records>';
+				inRef = true;
 			}
-			// }}}
-			// Authors {{{
-			if (jp.has(rawRef, '/contributors/0/authors/0/author/0/style')) {
-				ref.authors = jp.get(rawRef, '/contributors/0/authors/0/author').map(function(rawAuthor) {
-					return rawAuthor['style'][0]['_'];
+
+			ref += '<' + node.name
+			_.forEach(node.attribites, function(v, k) {
+				ref += ' ' + k + '="' + entities.encodeXML(v) + '"';
+			})
+			ref += '>';
+		})
+		.on('closetag', function(tag) {
+			if (inRef && tag == 'record') {
+				ref += '</' + tag + '></records></xml>';
+				recParser.parseString(ref, function(err, json) {
+					var parsedRef = _parseRef(json);
+					emitter.emit('ref', parsedRef);
 				});
+				ref = null;
+				inRef = false;
+			} else if (inRef) {
+				ref += '</' + tag + '>';
 			}
-			// }}}
-			// Key to key extractions {{{
-			_.forEach({
-				pages: 'pages',
-				volume: 'volume',
-				number: 'number',
-				isbn: 'isbn',
-				abstract: 'abstract',
-				label: 'label',
-				caption: 'caption',
-				notes: 'notes',
-			}, function(rlKey, enKey) {
-				var path = '/' + enKey + '/0/style/0/_';
-				if (jp.has(rawRef, path)) ref[rlKey] = jp.get(rawRef, path);
-			});
-			// }}}
-			// Dates {{{
-			if (jp.has(rawRef, '/dates/0/year/0/style/0/_')) ref.year = jp.get(rawRef, '/dates/0/year/0/style/0/_');
-			if (jp.has(rawRef, '/dates/0/pub-dates/0/date/0/style/0/_')) ref.date = jp.get(rawRef, '/dates/0/pub-dates/0/date/0/style/0/_');
-			// }}}
-			// URLs {{{
-			if (jp.has(rawRef, '/urls/0/related-urls/0/url')) {
-				ref.urls = rawRef['urls'][0]['related-urls'][0]['url'].map(function(rawURL) { return rawURL['style'][0]['_'] });
-			}
-			// }}}
-			emitter.emit('ref', ref);
+		})
+		.on('text', function(text) {
+			if (inRef) ref += entities.encodeXML(text);
+		})
+		.on('cdata', function(data) {
+			if (inRef) ref += '<![CDATA[' + data + ']]>';
+		})
+		.on('end', function() {
+			emitter.emit('end');
 		});
-
-		parser = null;
-		emitter.emit('end');
+	// }}}
+	// Feed into parser {{{
+	// NOTE: We have to do this in an async thread otherwise we can't return the emitter as a function return
+	setTimeout(function() {
+		if (_.isStream(input)) {
+			input.pipe(parser);
+		} else if (_.isString(input) || _.isBuffer(input)) {
+			parser.write(input).close();
+		}
 	});
-
-	setTimeout(function() { // Perform parser in async so the function will return the emitter otherwise an error could be thrown before the emitter is ready
-		parser.parseString(xml);
-	});
+	// }}}
 
 	return emitter;
 };
+
+function _parseRef(json) {
+	var ref = {};
+
+	var rawRef = json.xml.records[0].record[0];
+
+	// Complex extractions {{{
+	ref.recNumber = _.get(rawRef, 'rec-number.0');
+	if (_.has(rawRef, 'titles.0.title.0.style.0')) ref.title = _.get(rawRef, 'titles.0.title.0.style.0');
+	if (_.has(rawRef, 'titles.0.secondary-title.0.style.0')) ref.journal = _.get(rawRef, 'titles.0.secondary-title.0.style.0');
+	if (_.has(rawRef, 'auth-address.0.style.0')) ref.address = _.get(rawRef, 'auth-address.0.style.0');
+	if (_.has(rawRef, 'research-notes.0.style.0')) ref.researchNotes = _.get(rawRef, 'research-notes.0.style.0');
+	// }}}
+	// Type {{{
+	if (_.has(rawRef, 'ref-type.0.$.name')) {
+		var rawType = _.get(rawRef, 'ref-type.0.$.name');
+		var rlType = getTypeELtoRL(rawType);
+		if (!rlType) throw new Error('Unknown EndNote type: ' + rawType);
+		ref.type = rlType;
+	}
+	// }}}
+	// Authors {{{
+	if (_.has(rawRef, 'contributors.0.authors.0.author.0.style')) {
+		ref.authors = _.get(rawRef, 'contributors.0.authors.0.author').map(function(rawAuthor) {
+			return rawAuthor['style'][0];
+		});
+	}
+	// }}}
+	// Key to key extractions {{{
+	_.forEach({
+		pages: 'pages',
+		volume: 'volume',
+		number: 'number',
+		isbn: 'isbn',
+		abstract: 'abstract',
+		label: 'label',
+		caption: 'caption',
+		notes: 'notes',
+	}, function(rlKey, enKey) {
+		var path = enKey + '.0.style.0';
+		if (_.has(rawRef, path)) ref[rlKey] = _.get(rawRef, path);
+	});
+	// }}}
+	// Dates {{{
+	if (_.has(rawRef, 'dates.0.year.0.style.0')) ref.year = _.get(rawRef, 'dates.0.year.0.style.0');
+	if (_.has(rawRef, 'dates.0.pub-dates.0.date.0.style.0')) ref.date = _.get(rawRef, 'dates.0.pub-dates.0.date.0.style.0');
+	// }}}
+	// URLs {{{
+	if (_.has(rawRef, 'urls.0.related-urls.0.url')) {
+		ref.urls = rawRef['urls'][0]['related-urls'][0]['url'].map(function(rawURL) { return rawURL['style'][0] });
+	}
+	// }}}
+
+	return ref;
+}
+
 
 function output(options) {
 	var settings = _.defaults(options, {
