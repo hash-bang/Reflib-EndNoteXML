@@ -2,7 +2,7 @@ var expect = require('chai').expect;
 var fs = require('fs');
 var rl = require('../index');
 
-describe('EndNote XML parser - test #2', function() {
+describe('EndNote XML parser - test #2 (tiny data set)', function() {
 	var resErr;
 	var data = {};
 

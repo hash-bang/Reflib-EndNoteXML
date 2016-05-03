@@ -233,6 +233,11 @@ function _parseRef(json) {
 	if (_.has(rawRef, 'dates.0.year.0.style.0')) ref.year = _.get(rawRef, 'dates.0.year.0.style.0');
 	if (_.has(rawRef, 'dates.0.pub-dates.0.date.0.style.0')) ref.date = _.get(rawRef, 'dates.0.pub-dates.0.date.0.style.0');
 	// }}}
+	// Keywords {{{
+	if (_.has(rawRef, 'keywords.0.keyword')) {
+		ref.keywords = rawRef['keywords'][0]['keyword'].map(function(rawKeyword) { return rawKeyword['style'][0] });
+	}
+	// }}}
 	// URLs {{{
 	if (_.has(rawRef, 'urls.0.related-urls.0.url')) {
 		ref.urls = rawRef['urls'][0]['related-urls'][0]['url'].map(function(rawURL) { return rawURL['style'][0] });
