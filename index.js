@@ -96,7 +96,6 @@ function _escape(str) {
 		.replace(/'/g, '&apos;');
 }
 
-
 function parse(input) {
 	var emitter = new events.EventEmitter();
 
@@ -137,6 +136,14 @@ function parse(input) {
 			emitter.emit('error', e);
 		})
 		.on('opentag', function(node) {
+			// Fire `progress` emitter if we know enough to update that {{{
+			if (parser._parser && parser._parser.position) {
+				emitter.emit('progress', parser._parser.position);
+			} else if (parser.position && input.length) {
+				emitter.emit('progress', parser.position, input.length);
+			}
+			// }}}
+
 			if (node.name == 'record') {
 				ref = '<?xml version="1.0" encoding="UTF-8"?><xml><records>';
 				inRef = true;
