@@ -29,6 +29,7 @@ var types = [
 	{rlId: 'dictionary', enText: 'Dictionary', enId: 52},
 	{rlId: 'editedBook', enText: 'Edited Book', enId: 28},
 	{rlId: 'electronicArticle', enText: 'Electronic Article', enId: 43},
+	{rlId: 'electronicBook', enText: 'Electronic Article', enId: 44},
 	{rlId: 'electronicBookSection', enText:', Electronic Book Section', enId: 60},
 	{rlId: 'encyclopedia', enText: 'Encyclopedia', enId: 53},
 	{rlId: 'equation', enText: 'Equation', enId: 39},
