@@ -333,7 +333,7 @@ function output(options) {
 			} else if (ref.date) {
 				output += '<dates><pub-dates><date><style face="normal" font="default" size="100%">' + settings.escape(ref.date) + '</style></date></pub-dates></dates>';
 			} else if (ref.year) {
-				output += '<dates><year><style face="normal" font="default" size="100%">' + ref.year + '</style></year>';
+				output += '<dates><year><style face="normal" font="default" size="100%">' + ref.year + '</style></year></dates>';
 			}
 
 			if (ref.urls)
