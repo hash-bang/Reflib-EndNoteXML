@@ -373,14 +373,14 @@ function output(options) {
 			if (_.isFunction(settings.content)) { // Callback
 				var batchNo = 0;
 				var fetcher = function() {
-					settings.content(function(err, data) {
+					settings.content(function(err, data, isLast) {
 						if (err) return emitter.error(err);
-						if (_.isArray(data)) { // Callback provided array
+						if (_.isArray(data) && data.length > 0) { // Callback provided array
 							data.forEach(function(ref) {
 								settings.stream.write(settings.encode(ref));
 							});
 							setTimeout(fetcher);
-						} else if(_.isObject(data)) { // Callback provided single ref
+						} else if(!_.isArray(data) && _.isObject(data)) { // Callback provided single ref
 							settings.stream.write(settings.encode(data));
 							setTimeout(fetcher);
 						} else { // End of stream
