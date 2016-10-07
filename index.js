@@ -193,6 +193,8 @@ function parse(input) {
 					parser._parser.length = stat.size;
 					next();
 				});
+			} else {
+				next();
 			}
 		})
 		// }}}
