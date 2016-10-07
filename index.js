@@ -5,6 +5,7 @@ var _ = require('lodash').mixin({
 var async = require('async-chainable');
 var entities = require('entities');
 var events = require('events');
+var fs = require('fs');
 var moment = require('moment');
 var sax = require('sax');
 var xml2js = require('xml2js');
@@ -138,7 +139,7 @@ function parse(input) {
 		.on('opentag', function(node) {
 			// Fire `progress` emitter if we know enough to update that {{{
 			if (parser._parser && parser._parser.position) {
-				emitter.emit('progress', parser._parser.position);
+				emitter.emit('progress', parser._parser.position, parser._parser.length || undefined);
 			} else if (parser.position && input.length) {
 				emitter.emit('progress', parser.position, input.length);
 			}
@@ -183,13 +184,34 @@ function parse(input) {
 	// }}}
 	// Feed into parser {{{
 	// NOTE: We have to do this in an async thread otherwise we can't return the emitter as a function return
-	setTimeout(function() {
-		if (_.isStream(input)) {
-			input.pipe(parser);
-		} else if (_.isString(input) || _.isBuffer(input)) {
-			parser.write(input).close();
-		}
-	});
+	async()
+		// Try to populate the parser stream length from the file name stats if the stream looks like an accessible file {{{
+		.then(function(next) {
+			if (_.isStream(input) && input.path) {
+				fs.stat(input.path, function(err, stat) {
+					if (err) return next(err);
+					parser._parser.length = stat.size;
+					next();
+				});
+			}
+		})
+		// }}}
+		// Invoke the parser {{{
+		.then(function(next) {
+			if (_.isStream(input)) {
+				input.pipe(parser);
+			} else if (_.isString(input) || _.isBuffer(input)) {
+				parser.write(input).close();
+			}
+			next();
+		})
+		// }}}
+		// End - Very basic error handling for this early in the loader order {{{
+		.end(function(err) {
+			if (err) emitter.emit('error', err);
+			// Everything else handled by the SAX emitters
+		});
+		// }}}
 	// }}}
 
 	return emitter;
