@@ -18,7 +18,7 @@ describe('EndNote XML - XML file -> object -> XML buffer', function() {
 				// Step 1 - Read from file {{{
 				step = 1;
 				sampleData = [];
-				rl.parse(fs.readFileSync(__dirname + '/data/endnote.xml'))
+				rl.parse(fs.readFileSync(__dirname + '/data/endnote-md.xml'))
 					.on('error', function(err) {
 						resErr = err;
 						finish();

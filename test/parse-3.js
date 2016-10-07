@@ -9,7 +9,7 @@ describe('EndNote XML parser - test #3 (big data set)', function() {
 
 	before(function(next) {
 		this.timeout(60 * 1000);
-		rl.parse(fs.createReadStream(__dirname + '/data/endnote3.xml'))
+		rl.parse(fs.createReadStream(__dirname + '/data/endnote-lg.xml'))
 			.on('error', function(err) {
 				resErr = err;
 				next();

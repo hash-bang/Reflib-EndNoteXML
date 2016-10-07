@@ -8,7 +8,7 @@ describe('EndNote XML parser - progress', function() {
 		var progressMax;
 
 		this.timeout(60 * 1000);
-		rl.parse(fs.readFileSync(__dirname + '/data/endnote2.xml', 'utf-8'))
+		rl.parse(fs.readFileSync(__dirname + '/data/endnote-sm.xml', 'utf-8'))
 			.on('error', function(err) {
 				expect(err).to.be.not.ok;
 				next();
@@ -29,7 +29,7 @@ describe('EndNote XML parser - progress', function() {
 		var progressMax;
 
 		this.timeout(60 * 1000);
-		rl.parse(fs.readFileSync(__dirname + '/data/endnote2.xml'))
+		rl.parse(fs.readFileSync(__dirname + '/data/endnote-sm.xml'))
 			.on('error', function(err) {
 				expect(err).to.be.not.ok;
 				next();
@@ -50,7 +50,7 @@ describe('EndNote XML parser - progress', function() {
 		var progressMax;
 
 		this.timeout(60 * 1000);
-		rl.parse(fs.createReadStream(__dirname + '/data/endnote2.xml'))
+		rl.parse(fs.createReadStream(__dirname + '/data/endnote-sm.xml'))
 			.on('error', function(err) {
 				expect(err).to.be.not.ok;
 				next();

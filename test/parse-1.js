@@ -2,13 +2,13 @@ var expect = require('chai').expect;
 var fs = require('fs');
 var rl = require('../index');
 
-describe('EndNote XML parser - test #1 (regular sized data set)', function() {
+describe('EndNote XML parser - test #1 (medium sized data set)', function() {
 	var resErr, resCount = 0, resCountCalled = 0;
 	var sampleData = {};
 
 	before(function(next) {
 		this.timeout(60 * 1000);
-		rl.parse(fs.readFileSync(__dirname + '/data/endnote.xml'))
+		rl.parse(fs.readFileSync(__dirname + '/data/endnote-md.xml'))
 			.on('error', function(err) {
 				resErr = err;
 				next();
