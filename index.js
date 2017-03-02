@@ -265,9 +265,9 @@ function _parseRef(json) {
 	if (_.has(rawRef, 'dates.0.year.0.style.0')) ref.year = _.get(rawRef, 'dates.0.year.0.style.0');
 	if (_.has(rawRef, 'dates.0.pub-dates.0.date.0.style.0')) ref.date = _.get(rawRef, 'dates.0.pub-dates.0.date.0.style.0');
 	// }}}
-	// Keywords {{{
+	// Keywords -> Tags {{{
 	if (_.has(rawRef, 'keywords.0.keyword')) {
-		ref.keywords = rawRef.keywords[0].keyword
+		ref.tags = rawRef.keywords[0].keyword
 			.map(function(rawKeyword) {
 				if (_.isString(rawKeyword)) return rawKeyword;
 				if (_.has(rawKeyword, 'style.0')) return rawKeyword['style'][0];
@@ -373,9 +373,9 @@ function output(options) {
 					ref.urls.map(function(url) { return '<url><style face="normal" font="default" size="100%">' + settings.escape(url) + '</style></url>' }) +
 					'</related-urls></urls>';
 
-			if (ref.keywords)
+			if (ref.tags)
 				output += '<keywords>' +
-					ref.keywords.map(function(keyword) { return '<keyword><style face="normal" font="default" size="100%">' + settings.escape(keyword) + '</style></keyword>' }) +
+					ref.tags.map(function(keyword) { return '<keyword><style face="normal" font="default" size="100%">' + settings.escape(keyword) + '</style></keyword>' }) +
 					'</keywords>';
 
 			return '<record>' + output + '</record>';
