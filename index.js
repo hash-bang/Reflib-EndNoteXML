@@ -267,7 +267,15 @@ function _parseRef(json) {
 	// }}}
 	// Keywords {{{
 	if (_.has(rawRef, 'keywords.0.keyword')) {
-		ref.keywords = rawRef['keywords'][0]['keyword'].map(function(rawKeyword) { return rawKeyword['style'][0] });
+		ref.keywords = rawRef.keywords[0].keyword
+			.map(function(rawKeyword) {
+				if (_.isString(rawKeyword)) return rawKeyword;
+				if (_.has(rawKeyword, 'style.0')) return rawKeyword['style'][0];
+				return false;
+			})
+			.filter(function(keyword) {
+				return !! keyword;
+			})
 	}
 	// }}}
 	// URLs {{{
@@ -365,7 +373,7 @@ function output(options) {
 					ref.urls.map(function(url) { return '<url><style face="normal" font="default" size="100%">' + settings.escape(url) + '</style></url>' }) +
 					'</related-urls></urls>';
 
-			if (ref.keywords) 
+			if (ref.keywords)
 				output += '<keywords>' +
 					ref.keywords.map(function(keyword) { return '<keyword><style face="normal" font="default" size="100%">' + settings.escape(keyword) + '</style></keyword>' }) +
 					'</keywords>';
