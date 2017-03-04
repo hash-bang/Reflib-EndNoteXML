@@ -57,12 +57,12 @@ describe('EndNote XML parser - test #3 (big data set)', function() {
 		expect(sample.urls).to.have.length(2);
 		expect(sample.urls[0]).to.equal('http://www.embase.com/search/results?subaction=viewrecord&from=export&id=L51007603');
 		expect(sample.urls[1]).to.equal('http://dx.doi.org/10.1161/STROKEAHA.110.589531');
-		expect(sample.tags).to.have.length(22);
-		expect(sample.tags).to.include('angiotensin receptor antagonist');
-		expect(sample.tags).to.include('blood pressure variability');
-		expect(sample.tags).to.include('heart atrium fibrillation');
-		expect(sample.tags).to.include('new onset atrial fibrillation');
-		expect(sample.tags).to.include('systolic blood pressure');
+		expect(sample.keywords).to.have.length(22);
+		expect(sample.keywords).to.include('angiotensin receptor antagonist');
+		expect(sample.keywords).to.include('blood pressure variability');
+		expect(sample.keywords).to.include('heart atrium fibrillation');
+		expect(sample.keywords).to.include('new onset atrial fibrillation');
+		expect(sample.keywords).to.include('systolic blood pressure');
 	});
 
 
@@ -85,12 +85,12 @@ describe('EndNote XML parser - test #3 (big data set)', function() {
 		expect(sample).to.have.property('urls');
 		expect(sample.urls).to.have.length(2);
 		expect(sample.urls).to.deep.equal(['http://www.embase.com/search/results?subaction=viewrecord&from=export&id=L71223494', 'http://dx.doi.org/10.1007/s12288-013-0303-y'], 'urls');
-		expect(sample.tags).to.have.length(86);
-		expect(sample.tags).to.include('novel erythropoiesis stimulating protein');
-		expect(sample.tags).to.include('steroid');
-		expect(sample.tags).to.include('anemia');
-		expect(sample.tags).to.include('chemotherapy');
-		expect(sample.tags).to.include('myelodysplastic syndrome');
+		expect(sample.keywords).to.have.length(86);
+		expect(sample.keywords).to.include('novel erythropoiesis stimulating protein');
+		expect(sample.keywords).to.include('steroid');
+		expect(sample.keywords).to.include('anemia');
+		expect(sample.keywords).to.include('chemotherapy');
+		expect(sample.keywords).to.include('myelodysplastic syndrome');
 	});
 
 
@@ -111,11 +111,11 @@ describe('EndNote XML parser - test #3 (big data set)', function() {
 		expect(sample).to.have.property('urls');
 		expect(sample.urls).to.have.length(2);
 		expect(sample.urls).to.deep.equal(['http://www.embase.com/search/results?subaction=viewrecord&from=export&id=L36928859', 'http://dx.doi.org/10.1016/S0248-8663(03)00135-8'], 'urls');
-		expect(sample.tags).to.have.length(23);
-		expect(sample.tags).to.include('alpha adrenergic receptor blocking agent');
-		expect(sample.tags).to.include('doxazosin');
-		expect(sample.tags).to.include('methyldopa');
-		expect(sample.tags).to.include('clinical trial');
-		expect(sample.tags).to.include('hypertension');
+		expect(sample.keywords).to.have.length(23);
+		expect(sample.keywords).to.include('alpha adrenergic receptor blocking agent');
+		expect(sample.keywords).to.include('doxazosin');
+		expect(sample.keywords).to.include('methyldopa');
+		expect(sample.keywords).to.include('clinical trial');
+		expect(sample.keywords).to.include('hypertension');
 	});
 });
