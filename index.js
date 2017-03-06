@@ -226,10 +226,10 @@ function _parseRef(json) {
 
 	// Complex extractions {{{
 	ref.recNumber = _.get(rawRef, 'rec-number.0');
-	if (_.has(rawRef, 'titles.0.title.0.style.0')) ref.title = _.get(rawRef, 'titles.0.title.0.style.0');
-	if (_.has(rawRef, 'titles.0.secondary-title.0.style.0')) ref.journal = _.get(rawRef, 'titles.0.secondary-title.0.style.0');
-	if (_.has(rawRef, 'auth-address.0.style.0')) ref.address = _.get(rawRef, 'auth-address.0.style.0');
-	if (_.has(rawRef, 'research-notes.0.style.0')) ref.researchNotes = _.get(rawRef, 'research-notes.0.style.0');
+	if (_.has(rawRef, 'titles.0.title.0')) ref.title = _.get(rawRef, 'titles.0.title.0.style.0') || _.get(rawRef, 'titles.0.title.0');
+	if (_.has(rawRef, 'titles.0.secondary-title.0')) ref.journal = _.get(rawRef, 'titles.0.secondary-title.0.style.0') || _.get(rawRef, 'titles.0.secondary-title.0');;
+	if (_.has(rawRef, 'auth-address.0')) ref.address = _.get(rawRef, 'auth-address.0.style.0') || _.get(rawRef, 'auth-address.0');;
+	if (_.has(rawRef, 'research-notes.0')) ref.researchNotes = _.get(rawRef, 'research-notes.0.style.0') || _.get(rawRef, 'research-notes.0');;
 	// }}}
 	// Type {{{
 	if (_.has(rawRef, 'ref-type.0.$.name')) {
@@ -240,8 +240,9 @@ function _parseRef(json) {
 	}
 	// }}}
 	// Authors {{{
-	if (_.has(rawRef, 'contributors.0.authors.0.author.0.style')) {
+	if (_.has(rawRef, 'contributors.0.authors.0.author.0')) {
 		ref.authors = _.get(rawRef, 'contributors.0.authors.0.author').map(function(rawAuthor) {
+			if (_.isString(rawAuthor)) return rawAuthor;
 			return rawAuthor['style'][0];
 		});
 	}
@@ -257,13 +258,13 @@ function _parseRef(json) {
 		caption: 'caption',
 		notes: 'notes',
 	}, function(rlKey, enKey) {
-		var path = enKey + '.0.style.0';
-		if (_.has(rawRef, path)) ref[rlKey] = _.get(rawRef, path);
+		var checkPath = enKey + '.0';
+		if (_.has(rawRef, checkPath)) ref[rlKey] = _.get(rawRef, enKey + '.0.style.0') || _.get(rawRef, enKey + '.0');
 	});
 	// }}}
 	// Dates {{{
-	if (_.has(rawRef, 'dates.0.year.0.style.0')) ref.year = _.get(rawRef, 'dates.0.year.0.style.0');
-	if (_.has(rawRef, 'dates.0.pub-dates.0.date.0.style.0')) ref.date = _.get(rawRef, 'dates.0.pub-dates.0.date.0.style.0');
+	if (_.has(rawRef, 'dates.0.year.0')) ref.year = _.get(rawRef, 'dates.0.year.0.style.0') || _.get(rawRef, 'dates.0.year.0');
+	if (_.has(rawRef, 'dates.0.pub-dates.0.date.0')) ref.date = _.get(rawRef, 'dates.0.pub-dates.0.date.0.style.0') || _.get(rawRef, 'dates.0.pub-dates.0.date.0');
 	// }}}
 	// Keywords {{{
 	if (_.has(rawRef, 'keywords.0.keyword')) {
@@ -279,9 +280,18 @@ function _parseRef(json) {
 	}
 	// }}}
 	// URLs {{{
-	if (_.has(rawRef, 'urls.0.related-urls.0.url')) {
-		ref.urls = rawRef['urls'][0]['related-urls'][0]['url'].map(function(rawURL) { return rawURL['style'][0] });
-	}
+	['related-urls', 'text-urls'].forEach(function(key) {
+		if (_.has(rawRef, 'urls.0.' + key + '.0.url')) {
+			if (!ref.urls) ref.urls = [];
+			rawRef['urls'][0][key][0]['url'].forEach(function(rawURL) {
+				if (_.isString(rawURL)) {
+					ref.urls.push(rawURL);
+				} else if (_.has(rawURL, 'style.0')) {
+					ref.urls.push(rawURL['style'][0]);
+				}
+			});
+		}
+	});
 	// }}}
 
 	return ref;
