@@ -117,7 +117,7 @@ function parse(input) {
 	// Setup record parser {{{
 	var recParser = new xml2js.Parser({
 		async: false, // We will handle our own async
-		normalizeTags: true,
+		normalizeKeywords: true,
 		normalize: true,
 	});
 	// }}}
@@ -385,7 +385,7 @@ function output(options) {
 
 			if (ref.keywords)
 				output += '<keywords>' +
-					ref.tags.map(function(keyword) { return '<keyword><style face="normal" font="default" size="100%">' + settings.escape(keyword) + '</style></keyword>' }) +
+					ref.keywords.map(function(keyword) { return '<keyword><style face="normal" font="default" size="100%">' + settings.escape(keyword) + '</style></keyword>' }) +
 					'</keywords>';
 
 			return '<record>' + output + '</record>';
