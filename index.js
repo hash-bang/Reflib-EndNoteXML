@@ -315,7 +315,11 @@ function output(options) {
 				'<foreign-keys><key app="EN" db-id="s55prpsswfsepue0xz25pxai2p909xtzszzv">' + settings.escape(ref.recordOffset) + '</key></foreign-keys>';
 
 			var foundType = getTypeRLtoEL(ref.type || settings.defaultType);
-			if (!foundType) return next('Unknown or unsuppoted reference type: ' + ref.type);
+			if (!foundType) {
+				console.log('Unknown or unsuppoted reference type: ' + ref.type + '. Using default of "' + settings.defaultType + '" instead');
+				foundType = getTypeRLtoEL(settings.defaultType);
+			}
+
 			output += '<ref-type name="' + foundType.enText + '">' + settings.escape(foundType.enId) + '</ref-type>';
 
 			output += '<contributors><authors>' +
