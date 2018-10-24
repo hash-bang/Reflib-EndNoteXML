@@ -128,7 +128,7 @@ function parse(input) {
 	parser
 		.on('error', function (e) {
 			if (hasErr) {
-				parser.end();
+				// Calling parser.end() here can cause infinite loop if Sax raises another error.
 				return; // Already errored
 			}
 
@@ -203,7 +203,12 @@ function parse(input) {
 			if (_.isStream(input)) {
 				input.pipe(parser);
 			} else if (_.isString(input) || _.isBuffer(input)) {
-				parser.write(input).close();
+				try{
+					parser.write(input).close();
+				}
+				catch(err){
+					emitter.emit('error', err);
+				}
 			}
 			next();
 		})
