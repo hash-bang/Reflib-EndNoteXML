@@ -262,6 +262,13 @@ function _parseRef(json) {
 		label: 'label',
 		caption: 'caption',
 		notes: 'notes',
+		custom1: 'custom1',
+		custom2: 'custom2',
+		custom3: 'custom3',
+		custom4: 'custom4',
+		custom5: 'custom5',
+		custom6: 'custom6',
+		custom7: 'custom7',
 	}, function(rlKey, enKey) {
 		var checkPath = enKey + '.0';
 		if (_.has(rawRef, checkPath)) ref[rlKey] = _.get(rawRef, enKey + '.0.style.0') || _.get(rawRef, enKey + '.0');
