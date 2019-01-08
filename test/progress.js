@@ -61,7 +61,7 @@ describe('EndNote XML parser - progress', function() {
 			})
 			.on('end', function() {
 				expect(progressMin).to.be.above(0);
-				expect(progressMax).to.be.equal(26998);
+				expect(progressMax).to.be.equal(27626);
 				next();
 			});
 	});
