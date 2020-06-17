@@ -161,6 +161,7 @@ describe('EndNote XML output - array via callback', function() {
 	var refs = [
 		{id: 'ref01', title: 'Hello World', authors: ['Joe Random', 'John Random'], volume: 1},
 		{id: 'ref02', title: 'Goodbye World', authors: ['Josh Random', 'Janet Random'], volume: 2},
+		{id: 'ref03', title: 'Hello & Goodbye', authors: ['Jane Quark'], volume: 3},
 	];
 
 	var output, rlOutput, rlErr;
@@ -215,7 +216,7 @@ describe('EndNote XML output - array via callback', function() {
 
 	it('should translate back into a collection', function() {
 		expect(rlErr).to.be.not.ok;
-		expect(rlOutput).to.have.length(2);
+		expect(rlOutput).to.have.length(3);
 
 		expect(_.find(rlOutput, {title: 'Hello World'})).to.deep.equal({
 			recNumber: '1',
@@ -231,6 +232,14 @@ describe('EndNote XML output - array via callback', function() {
 			authors: ['Josh Random', 'Janet Random'],
 			type: 'report',
 			volume: '2',
+		});
+
+		expect(_.find(rlOutput, {title: 'Hello & Goodbye'})).to.deep.equal({
+			recNumber: '3',
+			title: 'Hello & Goodbye',
+			authors: ['Jane Quark'],
+			type: 'report',
+			volume: '3',
 		});
 	});
 });
