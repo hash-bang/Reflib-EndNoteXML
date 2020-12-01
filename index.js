@@ -271,7 +271,9 @@ function _parseRef(json) {
 		custom7: 'custom7',
 	}, function(rlKey, enKey) {
 		var checkPath = enKey + '.0';
-		if (_.has(rawRef, checkPath)) ref[rlKey] = _.get(rawRef, enKey + '.0.style.0') || _.get(rawRef, enKey + '.0');
+		// .join(' ') is a workaround for trimming the whitespace when a section is bolded in the abstract
+		// It will insert an unessesary space if half a word is bolded however this is a limitation with the way endnote works
+		if (_.has(rawRef, checkPath)) ref[rlKey] = _.get(rawRef, enKey + '.0.style').join(' ') || _.get(rawRef, enKey + '.0');
 	});
 	// }}}
 	// Dates {{{
