@@ -269,6 +269,7 @@ function _parseRef(json) {
 		custom5: 'custom5',
 		custom6: 'custom6',
 		custom7: 'custom7',
+		'electronic-resource-num': 'doi',
 	}, function(rlKey, enKey) {
 		var checkPath = enKey + '.0';
 		if (_.has(rawRef, checkPath)) ref[rlKey] = _.get(rawRef, enKey + '.0.style.0') || _.get(rawRef, enKey + '.0');
