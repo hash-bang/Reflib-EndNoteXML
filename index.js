@@ -1,13 +1,15 @@
-var _ = require('lodash').mixin({
-	isStream: require('isstream'),
-});
-
+var _ = {
+	forEach: require('lodash/forEach'),
+	get: require('lodash/get'),
+	memoize: require('lodash/memoize'),
+};
 var async = require('async-chainable');
+var dateFns = {format: require('date-fns/format')};
 var entities = require('entities');
 var events = require('events');
 var fs = require('fs');
-var moment = require('moment');
 var sax = require('sax');
+var stream = require('stream');
 var xml2js = require('xml2js');
 
 var types = [
@@ -68,7 +70,7 @@ var types = [
 * @return string the RefLib type
 */
 var getTypeELtoRL = _.memoize(function(enType) {
-	var found = _.find(types, {enText: enType});
+	var found = types.find(t => t.enText == enType);
 	return found ? found.rlId : false;
 });
 
@@ -78,7 +80,7 @@ var getTypeELtoRL = _.memoize(function(enType) {
 * @return object The object in the types collection
 */
 var getTypeRLtoEL = _.memoize(function(rlId) {
-	var found = _.find(types, {rlId: rlId});
+	var found = types.find(t => t.rlId == rlId);
 	return found;
 });
 
@@ -102,9 +104,9 @@ function parse(input) {
 
 	// Setup parser {{{
 	var parser;
-	if (_.isStream(input)) {
+	if (input instanceof stream.Stream) {
 		parser = sax.createStream(true, {});
-	} else if (_.isString(input) || _.isBuffer(input)) {
+	} else if (typeof input == 'string' || Buffer.isBuffer(input)) {
 		parser = sax.parser(true);
 		parser.on = function(event, cb) { // Quick binder to simulate on() behaviour
 			parser['on' + event] = cb;
@@ -187,7 +189,7 @@ function parse(input) {
 	async()
 		// Try to populate the parser stream length from the file name stats if the stream looks like an accessible file {{{
 		.then(function(next) {
-			if (_.isStream(input) && input.path) {
+			if (input instanceof stream.Stream && input.path) {
 				fs.stat(input.path, function(err, stat) {
 					if (err) return next(err);
 					parser._parser.length = stat.size;
@@ -200,9 +202,9 @@ function parse(input) {
 		// }}}
 		// Invoke the parser {{{
 		.then(function(next) {
-			if (_.isStream(input)) {
+			if (input instanceof stream.Stream) {
 				input.pipe(parser);
-			} else if (_.isString(input) || _.isBuffer(input)) {
+			} else if (typeof input == 'string' || Buffer.isBuffer(input)) {
 				try{
 					parser.write(input).close();
 				}
@@ -231,13 +233,13 @@ function _parseRef(json) {
 
 	// Complex extractions {{{
 	ref.recNumber = _.get(rawRef, 'rec-number.0');
-	if (_.has(rawRef, 'titles.0.title.0')) ref.title = _.get(rawRef, 'titles.0.title.0.style.0') || _.get(rawRef, 'titles.0.title.0');
-	if (_.has(rawRef, 'titles.0.secondary-title.0')) ref.journal = _.get(rawRef, 'titles.0.secondary-title.0.style.0') || _.get(rawRef, 'titles.0.secondary-title.0');;
-	if (_.has(rawRef, 'auth-address.0')) ref.address = _.get(rawRef, 'auth-address.0.style.0') || _.get(rawRef, 'auth-address.0');;
-	if (_.has(rawRef, 'research-notes.0')) ref.researchNotes = _.get(rawRef, 'research-notes.0.style.0') || _.get(rawRef, 'research-notes.0');;
+	if (_.get(rawRef, 'titles.0.title.0')) ref.title = _.get(rawRef, 'titles.0.title.0.style.0') || _.get(rawRef, 'titles.0.title.0');
+	if (_.get(rawRef, 'titles.0.secondary-title.0')) ref.journal = _.get(rawRef, 'titles.0.secondary-title.0.style.0') || _.get(rawRef, 'titles.0.secondary-title.0');;
+	if (_.get(rawRef, 'auth-address.0')) ref.address = _.get(rawRef, 'auth-address.0.style.0') || _.get(rawRef, 'auth-address.0');;
+	if (_.get(rawRef, 'research-notes.0')) ref.researchNotes = _.get(rawRef, 'research-notes.0.style.0') || _.get(rawRef, 'research-notes.0');;
 	// }}}
 	// Type {{{
-	if (_.has(rawRef, 'ref-type.0.$.name')) {
+	if (_.get(rawRef, 'ref-type.0.$.name')) {
 		var rawType = _.get(rawRef, 'ref-type.0.$.name');
 		var rlType = getTypeELtoRL(rawType);
 		if (!rlType) throw new Error('Unknown EndNote type: ' + rawType);
@@ -245,9 +247,9 @@ function _parseRef(json) {
 	}
 	// }}}
 	// Authors {{{
-	if (_.has(rawRef, 'contributors.0.authors.0.author.0')) {
+	if (_.get(rawRef, 'contributors.0.authors.0.author.0')) {
 		ref.authors = _.get(rawRef, 'contributors.0.authors.0.author').map(function(rawAuthor) {
-			if (_.isString(rawAuthor)) return rawAuthor;
+			if (typeof rawAuthor == 'string') return rawAuthor;
 			return rawAuthor['style'][0];
 		});
 	}
@@ -274,19 +276,19 @@ function _parseRef(json) {
 		var checkPath = enKey + '.0';
 		// .join(' ') is a workaround for trimming the whitespace when a section is bolded in the abstract
 		// It will insert an unessesary space if half a word is bolded however this is a limitation with the way endnote works
-		if (_.has(rawRef, checkPath)) ref[rlKey] = _.get(rawRef, enKey + '.0.style').join(' ') || _.get(rawRef, enKey + '.0');
+		if (_.get(rawRef, checkPath)) ref[rlKey] = _.get(rawRef, enKey + '.0.style').join(' ') || _.get(rawRef, enKey + '.0');
 	});
 	// }}}
 	// Dates {{{
-	if (_.has(rawRef, 'dates.0.year.0')) ref.year = _.get(rawRef, 'dates.0.year.0.style.0') || _.get(rawRef, 'dates.0.year.0');
-	if (_.has(rawRef, 'dates.0.pub-dates.0.date.0')) ref.date = _.get(rawRef, 'dates.0.pub-dates.0.date.0.style.0') || _.get(rawRef, 'dates.0.pub-dates.0.date.0');
+	if (_.get(rawRef, 'dates.0.year.0')) ref.year = _.get(rawRef, 'dates.0.year.0.style.0') || _.get(rawRef, 'dates.0.year.0');
+	if (_.get(rawRef, 'dates.0.pub-dates.0.date.0')) ref.date = _.get(rawRef, 'dates.0.pub-dates.0.date.0.style.0') || _.get(rawRef, 'dates.0.pub-dates.0.date.0');
 	// }}}
 	// Keywords {{{
-	if (_.has(rawRef, 'keywords.0.keyword')) {
+	if (_.get(rawRef, 'keywords.0.keyword')) {
 		ref.keywords = rawRef.keywords[0].keyword
 			.map(function(rawKeyword) {
-				if (_.isString(rawKeyword)) return rawKeyword;
-				if (_.has(rawKeyword, 'style.0')) return rawKeyword['style'][0];
+				if (typeof rawKeyboard == 'string') return rawKeyword;
+				if (_.get(rawKeyword, 'style.0')) return rawKeyword['style'][0];
 				return false;
 			})
 			.filter(function(keyword) {
@@ -296,12 +298,12 @@ function _parseRef(json) {
 	// }}}
 	// URLs {{{
 	['related-urls', 'text-urls'].forEach(function(key) {
-		if (_.has(rawRef, 'urls.0.' + key + '.0.url')) {
+		if (_.get(rawRef, 'urls.0.' + key + '.0.url')) {
 			if (!ref.urls) ref.urls = [];
 			rawRef['urls'][0][key][0]['url'].forEach(function(rawURL) {
-				if (_.isString(rawURL)) {
+				if (typeof rawURL == 'string') {
 					ref.urls.push(rawURL);
-				} else if (_.has(rawURL, 'style.0')) {
+				} else if (_.get(rawURL, 'style.0')) {
 					ref.urls.push(rawURL['style'][0]);
 				}
 			});
@@ -314,12 +316,13 @@ function _parseRef(json) {
 
 
 function output(options) {
-	var settings = _.defaults(options, {
+	var settings = {
 		stream: null,
 		xmlOptions: {
 			file: 'EndNote.enl',
 		},
 		defaultType: 'report', // Assume this reference type if we are not provided with one
+		formatDate: date => value instanceof Date ? dateFns.format(date, 'YYYY-MM-DD') : value,
 		encode: function(ref) {
 			settings.recordOffset++;
 
@@ -385,9 +388,9 @@ function output(options) {
 					output += '<' + enKey + '><style face="normal" font="default" size="100%">' + settings.escape(ref[rlKey]) + '</style></' + enKey + '>';
 			});
 
-			if (ref.date && ref.year && _.isDate(ref.date)) {
+			if (ref.date && ref.year && ref.date instanceof Date) {
 				output += '<dates><year><style face="normal" font="default" size="100%">' + ref.year + '</style></year>';
-				output += '<pub-dates><date><style face="normal" font="default" size="100%">' + moment(ref.date).format('YYYY-MM-DD') + '</style></date></pub-dates></dates>';
+				output += '<pub-dates><date><style face="normal" font="default" size="100%">' + settings.formatDate(ref.date) + '</style></date></pub-dates></dates>';
 			} else if (ref.date && ref.year) {
 				output += '<dates><year><style face="normal" font="default" size="100%">' + ref.year + '</style></year>';
 				output += '<pub-dates><date><style face="normal" font="default" size="100%">' + ref.date + '</style></date></pub-dates></dates>';
@@ -412,7 +415,9 @@ function output(options) {
 		escape: this._escape,
 		recordOffset: 0,
 		content: [],
-	});
+
+		...options,
+	};
 
 	async()
 		// Sanity checks {{{
@@ -431,17 +436,17 @@ function output(options) {
 
 		// References {{{
 		.then(function(next) {
-			if (_.isFunction(settings.content)) { // Callback
+			if (typeof settings.content == 'function') { // Callback
 				var batchNo = 0;
 				var fetcher = function() {
 					settings.content(function(err, data, isLast) {
 						if (err) return emitter.error(err);
-						if (_.isArray(data) && data.length > 0) { // Callback provided array
+						if (Array.isArray(data) && data.length > 0) { // Callback provided array
 							data.forEach(function(ref) {
 								settings.stream.write(settings.encode(ref));
 							});
 							setTimeout(fetcher);
-						} else if(!_.isArray(data) && _.isObject(data)) { // Callback provided single ref
+						} else if (!Array.isArray(data) && typeof data == 'object') { // Callback provided single ref
 							settings.stream.write(settings.encode(data));
 							setTimeout(fetcher);
 						} else { // End of stream
@@ -450,12 +455,12 @@ function output(options) {
 					}, batchNo++);
 				};
 				fetcher();
-			} else if (_.isArray(settings.content)) { // Array of refs
+			} else if (Array.isArray(settings.content)) { // Array of refs
 				settings.content.forEach(function(ref) {
 					settings.stream.write(settings.encode(ref));
 				});
 				next();
-			} else if (_.isObject(settings.content)) { // Single ref
+			} else if (typeof settings.content == 'object') { // Single ref
 				settings.stream.write(settings.encode(settings.content));
 				next();
 			}
