@@ -242,7 +242,7 @@ function _parseRef(json) {
 	if (_.get(rawRef, 'ref-type.0.$.name')) {
 		var rawType = _.get(rawRef, 'ref-type.0.$.name');
 		var rlType = getTypeELtoRL(rawType);
-		if (!rlType) throw new Error('Unknown EndNote type: ' + rawType);
+		if (!rlType) console.error('Unknown EndNote type: ' + rawType);
 		ref.type = rlType;
 	}
 	// }}}
@@ -276,7 +276,7 @@ function _parseRef(json) {
 		var checkPath = enKey + '.0';
 		// .join(' ') is a workaround for trimming the whitespace when a section is bolded in the abstract
 		// It will insert an unessesary space if half a word is bolded however this is a limitation with the way endnote works
-		if (_.get(rawRef, checkPath)) ref[rlKey] = _.get(rawRef, enKey + '.0.style').join(' ') || _.get(rawRef, enKey + '.0');
+		if (_.get(rawRef, checkPath)) ref[rlKey] = (_.get(rawRef, enKey + '.0.style') ? _.get(rawRef, enKey + '.0.style').join(' ') : null) || _.get(rawRef, enKey + '.0');
 	});
 	// }}}
 	// Dates {{{
