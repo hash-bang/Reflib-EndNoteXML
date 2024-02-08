@@ -1,15 +1,15 @@
 {
   "name": "reflib-endnotexml",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Reflib parser for EndNote XML files",
   "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/hash-bang/Reflib-EndNoteXML"
   },
-	"scripts": {
-		"test": "mocha"
-	},
+  "scripts": {
+    "test": "mocha"
+  },
   "keywords": [
     "reflib",
     "endnote",
